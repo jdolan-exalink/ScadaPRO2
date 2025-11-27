@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../App';
-import { iotService } from '../../services/iotService';
+import { scadaBackendService } from '../../services/scadaBackendService';
 import { Machine, MachineLayout, WidgetConfig, SensorWithMQTT } from '../../types';
 import { GaugeWidget } from './widgets/GaugeWidget';
 import { LineChartWidget } from './widgets/LineChartWidget';
@@ -35,7 +35,7 @@ export const MachineDetail: React.FC = () => {
   // Fetch list of machines for the dropdown
   useEffect(() => {
     if(!currentBackend) return;
-    iotService.getMachines()
+    scadaBackendService.getMachines()
       .then(data => {
         setMachines(data);
         // If no machineId in URL but we have machines, navigate to first one
@@ -56,14 +56,13 @@ export const MachineDetail: React.FC = () => {
     setSelectedMachine(machine || null);
     
     Promise.all([
-      iotService.getMachineLayout(machineId).catch(() => null),
-      machine ? iotService.getSensorsWithMQTT({ machine_code: machine.code }).catch(() => []) : Promise.resolve([])
+      machine ? scadaBackendService.getSensors().catch(() => []) : Promise.resolve([])
     ])
-      .then(([layoutData, sensorData]) => {
-        setLayout(layoutData);
+      .then(([sensorData]) => {
+        // For now, use sensors directly (layout support can be added later)
         setSensors(sensorData);
-        // Show demo panel if no layout is defined
-        setShowDemoPanel(!layoutData);
+        setLayout(null);
+        setShowDemoPanel(true);
       })
       .finally(() => setLoading(false));
   }, [currentBackend, machineId, machines]);

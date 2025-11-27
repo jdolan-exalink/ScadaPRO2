@@ -6,7 +6,7 @@ import {
   Eye, X, Search
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
-import { mqttService } from '../../services/mqttService';
+import { scadaBackendService } from '../../services/scadaBackendService';
 import { MQTTSystemStatus, PostgreSQLStats, CollectorStats } from '../../types';
 
 // Interface for sensor values from MQTT

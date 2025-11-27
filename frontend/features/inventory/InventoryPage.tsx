@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminService } from '../../services/adminService';
-import { mqttService } from '../../services/mqttService';
+import { scadaBackendService } from '../../services/scadaBackendService';
 import { PLC, Sensor } from '../../types';
 import { Server, Cpu, Activity, Wifi, WifiOff, RefreshCw } from 'lucide-react';
 

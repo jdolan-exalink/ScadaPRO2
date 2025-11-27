@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../App';
 import { MqttErrorDisplay } from '../../components/MqttErrorDisplay';
-import { iotService } from '../../services/iotService';
+import { scadaBackendService } from '../../services/scadaBackendService';
 import { Machine, DashboardMetric } from '../../types';
 import { Activity, AlertTriangle, Clock, Power, Settings2, Maximize, Minimize, Save, X, Plus, Trash2, GripHorizontal, Palette } from 'lucide-react';
 
@@ -33,25 +33,33 @@ export const Dashboard: React.FC = () => {
     if (!currentBackend) return;
     setLoading(true);
     try {
-        const [m, d] = await Promise.all([
-            iotService.getMachines(),
-            iotService.getDashboardMetrics()
+        const [m] = await Promise.all([
+            scadaBackendService.getMachines()
         ]);
         setMachines(m);
-        setMetrics(d);
         
-        // Check MQTT status
-        try {
-          const response = await fetch('/api/mqtt/stats');
-          if (response.ok) {
-            const statusData = await response.json();
-            setMqttConnected(statusData.connected === true);
-          } else {
-            setMqttConnected(m.length > 0);
-          }
-        } catch {
-          setMqttConnected(m.length > 0);
+        // For now, create basic metrics from machines and their sensors
+        // In production, you'd have a dedicated dashboard metrics endpoint
+        const metrics: DashboardMetric[] = [];
+        for (const machine of m) {
+          const sensors = await scadaBackendService.getSensors();
+          const machineSensors = sensors.filter(s => s.machine_id === machine.id).slice(0, 4);
+          
+          machineSensors.forEach((sensor, idx) => {
+            metrics.push({
+              id: `${machine.id}-${sensor.id}`,
+              label: sensor.description || sensor.name,
+              machineName: machine.name,
+              groupColor: '#3b82f6',
+              unit: sensor.unit || '',
+              setPoint: 0,
+              value: sensor.last_value || 0,
+              tolerance: 5
+            });
+          });
         }
+        setMetrics(metrics);
+        setMqttConnected(m.length > 0);
     } catch (e) {
         console.error(e);
     } finally {

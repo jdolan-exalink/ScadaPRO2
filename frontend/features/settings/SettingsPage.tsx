@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { adminService } from '../../services/adminService';
-import { mqttService } from '../../services/mqttService';
+import { scadaBackendService } from '../../services/scadaBackendService';
 import { PostgreSQLStats } from '../../types';
 import { RefreshCw, Cpu, Zap, Wifi, Activity, Save, Check, Settings, Server, Radio, Key, Copy, Database, HardDrive, FileText } from 'lucide-react';
 import { CollectorConfigModal } from './CollectorConfigModal';
