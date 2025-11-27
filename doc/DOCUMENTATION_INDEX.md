@@ -21,6 +21,26 @@
   - Security considerations
   - Maintenance procedures
 
+### For Security & Administration
+- **[SECURITY_IMPLEMENTATION.md](./SECURITY_IMPLEMENTATION.md)** - Authentication & Authorization Guide
+  - Login/logout system
+  - Role-based access control
+  - Permission system
+  - Protected routes
+  - Demo credentials
+  - Production migration
+  - Security best practices
+
+### For Production Deployment
+- **[PRODUCTION_MIGRATION_AUTH.md](./PRODUCTION_MIGRATION_AUTH.md)** - Production Authentication Migration
+  - Migration timeline
+  - Backend API design
+  - Frontend integration steps
+  - Database schema
+  - Security hardening
+  - Deployment checklist
+  - Monitoring setup
+
 ---
 
 ## 📖 Understanding the System
@@ -56,6 +76,27 @@
 ---
 
 ## ✅ Testing & Verification
+
+### Testing Guides
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Complete testing procedures
+  - Manual testing steps
+  - Unit tests setup
+  - Test scenarios (10+)
+  - Debugging tips
+  - Performance testing
+  - Security testing
+  - Troubleshooting
+
+### Developer References
+- **[QUICK_REFERENCE_AUTH.md](./QUICK_REFERENCE_AUTH.md)** - Authentication quick reference
+  - Login flow diagrams
+  - Demo credentials
+  - Key components summary
+  - Roles & permissions table
+  - File locations
+  - Common tasks
+  - Debug commands
+  - Troubleshooting table
 
 ### Verification Checklist
 - **[VERIFICATION_CHECKLIST.md](./VERIFICATION_CHECKLIST.md)** - Complete verification steps
