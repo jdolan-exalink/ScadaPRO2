@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+.vscode/
+*.log
+.DS_Store
+db_data/
+mosquitto/data/
+mosquitto/log/
+DB/

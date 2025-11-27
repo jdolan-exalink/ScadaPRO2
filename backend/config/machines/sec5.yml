@@ -1,0 +1,184 @@
+machine:
+  code: sec5
+  name: Secadora 5
+plc:
+  code: sec5_plc
+  name: PLC Secadora 5
+  protocol: modbus_tcp
+  ip_address: 192.168.72.11
+  port: 502
+  unit_id: 1
+  poll_interval_s: 1
+  enabled: true
+
+# ===== ESTADO PRINCIPAL DE LA MÁQUINA =====
+# Indicador ON/OFF visible y crítico - mostrar en ROJO cuando está OFF
+machine_status:
+- code: secadero_5_on
+  name: Secadero 5 ON
+  type: boolean
+  unit: ''
+  address: 76
+  function_code: 1
+  display_format: boolean
+  critical: true
+  color_off: '#FF0000'  # Rojo cuando está OFF
+  color_on: '#00FF00'   # Verde cuando está ON
+
+# ===== SENSORES OPERACIONALES =====
+sensors:
+- code: temperatura_medida_sec5
+  name: Temperatura Medida SEC5
+  type: temperature
+  unit: °C
+  address: 871
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: temperatura_set_sec5
+  name: Temperatura SET SEC5
+  type: temperature
+  unit: °C
+  address: 908
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: humedad_medida_sec5
+  name: Humedad Medida SEC5
+  type: humidity
+  unit: '%'
+  address: 1563
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: humedad_set_sec5
+  name: Humedad SET SEC5
+  type: humidity
+  unit: '%'
+  address: 856
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: velocidad_sec5
+  name: Velocidad SEC5
+  type: speed
+  unit: '%'
+  address: 505
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: tiempo_medido_sec5
+  name: Tiempo Medido SEC5
+  type: generic
+  unit: Min
+  address: 5016
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint32
+  swap: word
+- code: tiempo_set_sec5
+  name: Tiempo SET SEC5
+  type: generic
+  unit: Min
+  address: 5106
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: etapa_sec5
+  name: Etapa SEC5
+  type: generic
+  unit: / 13
+  address: 556
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+- code: programa_sec5
+  name: Programa SEC5
+  type: program
+  unit: ''
+  address: 336
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  display_format: mapped
+  value_map:
+    1: "Milan Economico"
+    2: "Eco/Crespo Cant"
+    3: "Milan Normal"
+    4: "Salamines"
+    5: "Bondiola"
+    6: "Camaras"
+- code: arranque_secadero_5
+  name: Arranque Secadero 5
+  type: boolean
+  unit: ''
+  address: 106
+  function_code: 1
+  scale_factor: 1.0
+  offset: 0.0
+
+# ===== ALARMAS Y FALLAS =====
+# Las fallas se guardan en BD con timestamp de activación y desactivación
+alarms:
+- code: falla_variador_sec5
+  name: Falla Variador SEC5
+  type: boolean
+  unit: ''
+  address: 107
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'  # Rojo cuando está activa
+  store_in_db: true
+  timestamp_on: true   # Guardar fecha/hora de activación
+  timestamp_off: true  # Guardar fecha/hora de desactivación
+  
+- code: falla_sensor_temperatura_sec5
+  name: Falla Sensor Temperatura SEC5
+  type: boolean
+  unit: ''
+  address: 108
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: falla_sensor_humedad_sec5
+  name: Falla Sensor Humedad SEC5
+  type: boolean
+  unit: ''
+  address: 109
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: paro_emergencia_general
+  name: Paro Emergencia General
+  type: boolean
+  unit: ''
+  address: 43
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: critical
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true

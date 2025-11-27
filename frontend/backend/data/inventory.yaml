@@ -1,0 +1,2203 @@
+machines:
+  - code: sec4
+    name: Secadora 4
+    description: null
+    id: 1
+    created_at: '2025-11-25T00:19:02.694644Z'
+    updated_at: null
+  - code: sec5
+    name: Secadora 5
+    description: null
+    id: 2
+    created_at: '2025-11-25T00:19:02.839440Z'
+    updated_at: null
+  - code: sec6
+    name: Secadora 6
+    description: null
+    id: 3
+    created_at: '2025-11-25T00:19:02.964718Z'
+    updated_at: null
+  - code: sec21
+    name: Secadora 21
+    description: null
+    id: 4
+    created_at: '2025-11-25T15:01:40.987414Z'
+    updated_at: null
+plcs:
+  - code: sec4_plc
+    name: PLC Secadora 4
+    protocol: modbus_tcp
+    ip_address: 192.168.72.30
+    port: 502
+    unit_id: 1
+    poll_interval_s: 1
+    enabled: true
+    id: 1
+    machine_id: 1
+    created_at: '2025-11-25T00:19:02.703929Z'
+    updated_at: null
+  - code: sec5_plc
+    name: PLC Secadora 5
+    protocol: modbus_tcp
+    ip_address: 192.168.72.30
+    port: 502
+    unit_id: 1
+    poll_interval_s: 1
+    enabled: true
+    id: 2
+    machine_id: 2
+    created_at: '2025-11-25T00:19:02.842636Z'
+    updated_at: null
+  - code: sec6_plc
+    name: PLC Secadora 6
+    protocol: modbus_tcp
+    ip_address: 192.168.72.30
+    port: 502
+    unit_id: 1
+    poll_interval_s: 1
+    enabled: true
+    id: 3
+    machine_id: 3
+    created_at: '2025-11-25T00:19:02.968790Z'
+    updated_at: null
+  - code: sec21_plc
+    name: PLC Secadora 21
+    protocol: modbus_tcp
+    ip_address: 192.168.72.11
+    port: 502
+    unit_id: 1
+    poll_interval_s: 1
+    enabled: true
+    id: 4
+    machine_id: 4
+    created_at: '2025-11-25T15:01:41.001351Z'
+    updated_at: null
+sensors:
+  - code: temperatura_ducto_medida_sec4
+    name: Temperatura Ducto Medida SEC4
+    type: temperature
+    unit: °C
+    address: 700
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 1
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.715043Z'
+    updated_at: null
+  - code: temperatura_n_cleo_medida_sec4
+    name: Temperatura Núcleo Medida SEC4
+    type: temperature
+    unit: °C
+    address: 703
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 2
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.724319Z'
+    updated_at: null
+  - code: temperatura_set_sec4
+    name: Temperatura SET SEC4
+    type: temperature
+    unit: °C
+    address: 900
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 3
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.727755Z'
+    updated_at: null
+  - code: humedad_medida_sec4
+    name: Humedad Medida SEC4
+    type: humidity
+    unit: '%'
+    address: 706
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 4
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.731089Z'
+    updated_at: null
+  - code: humedad_set_sec4
+    name: Humedad SET SEC4
+    type: humidity
+    unit: '%'
+    address: 850
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 5
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.734224Z'
+    updated_at: null
+  - code: tiempo_medido_sec4
+    name: Tiempo Medido SEC4
+    type: generic
+    unit: Min
+    address: 2980
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 6
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.737221Z'
+    updated_at: null
+  - code: tiempo_set_sec4
+    name: Tiempo SET SEC4
+    type: generic
+    unit: Min
+    address: 2982
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 7
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.740271Z'
+    updated_at: null
+  - code: velocidad_medida_sec4
+    name: Velocidad Medida SEC4
+    type: speed
+    unit: '%'
+    address: 500
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 8
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.742931Z'
+    updated_at: null
+  - code: etapa_sec4
+    name: Etapa SEC4
+    type: generic
+    unit: / 13
+    address: 536
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 9
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.745481Z'
+    updated_at: null
+  - code: programa_sec4
+    name: Programa SEC4
+    type: generic
+    unit: ''
+    address: 334
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 10
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.748230Z'
+    updated_at: null
+  - code: arranque_secadero_4
+    name: Arranque Secadero 4
+    type: generic
+    unit: ''
+    address: 40
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 11
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.750873Z'
+    updated_at: null
+  - code: rt_1_secadero_4
+    name: RT 1 Secadero 4
+    type: generic
+    unit: ''
+    address: 43
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 12
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.753406Z'
+    updated_at: null
+  - code: rt_2_secadero_4
+    name: RT 2 Secadero 4
+    type: generic
+    unit: ''
+    address: 44
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 13
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.756032Z'
+    updated_at: null
+  - code: pulsador_de_emergencia_sec4_6
+    name: Pulsador de Emergencia SEC4-6
+    type: generic
+    unit: ''
+    address: 48
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 14
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.758657Z'
+    updated_at: null
+  - code: reset_alarma_sec4_6
+    name: Reset Alarma SEC4-6
+    type: generic
+    unit: ''
+    address: 50
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 15
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.761175Z'
+    updated_at: null
+  - code: pid_fr_o_sec4
+    name: PID Frío SEC4
+    type: generic
+    unit: ''
+    address: 51
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 16
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.763901Z'
+    updated_at: null
+  - code: pid_calor_sec4
+    name: PID Calor SEC4
+    type: generic
+    unit: ''
+    address: 52
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 17
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.766372Z'
+    updated_at: null
+  - code: pausa_sec4
+    name: Pausa SEC4
+    type: generic
+    unit: ''
+    address: 57
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 18
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.768930Z'
+    updated_at: null
+  - code: deshielo_sec4
+    name: Deshielo SEC4
+    type: generic
+    unit: ''
+    address: 60
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 19
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.771481Z'
+    updated_at: null
+  - code: alarma_sec4
+    name: Alarma SEC4
+    type: generic
+    unit: ''
+    address: 63
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 20
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.774160Z'
+    updated_at: null
+  - code: paso_etapa_sec4
+    name: Paso Etapa SEC4
+    type: generic
+    unit: ''
+    address: 94
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 21
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.777013Z'
+    updated_at: null
+  - code: calor_secadero_4
+    name: Calor Secadero 4
+    type: generic
+    unit: ''
+    address: 0
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 22
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.779505Z'
+    updated_at: null
+  - code: fr_o_secadero_4
+    name: Frío Secadero 4
+    type: generic
+    unit: ''
+    address: 3
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 23
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.782127Z'
+    updated_at: null
+  - code: aspiraci_n_secadero_4
+    name: Aspiración Secadero 4
+    type: generic
+    unit: ''
+    address: 6
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 24
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.784736Z'
+    updated_at: null
+  - code: comando_variador_secadero_4
+    name: Comando Variador Secadero 4
+    type: generic
+    unit: ''
+    address: 12
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 25
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.787297Z'
+    updated_at: null
+  - code: alarma_activa_sec4_6
+    name: Alarma Activa SEC4-6
+    type: generic
+    unit: ''
+    address: 15
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 26
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.790015Z'
+    updated_at: null
+  - code: paro_emergencia_sec4_6
+    name: Paro Emergencia Sec4-6
+    type: generic
+    unit: ''
+    address: 66
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 27
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.792638Z'
+    updated_at: null
+  - code: velocidad_nula_sec4
+    name: Velocidad Nula SEC4
+    type: speed
+    unit: ''
+    address: 67
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 28
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.795289Z'
+    updated_at: null
+  - code: rel_t_rmico_n_1_sec4
+    name: Relé Térmico N°1 SEC4
+    type: generic
+    unit: ''
+    address: 68
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 29
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.797878Z'
+    updated_at: null
+  - code: rel_t_rmico_n_2_sec4
+    name: Relé Térmico N°2 SEC4
+    type: generic
+    unit: ''
+    address: 69
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 30
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.800476Z'
+    updated_at: null
+  - code: falla_comando_variador_sec4
+    name: Falla Comando Variador SEC4
+    type: generic
+    unit: ''
+    address: 70
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 31
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.803130Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_ducto_sec4
+    name: Falla Sensor Temperatura Ducto SEC4
+    type: temperature
+    unit: ''
+    address: 71
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 32
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.805880Z'
+    updated_at: null
+  - code: falla_sensor_humedad_sec4
+    name: Falla Sensor Humedad SEC4
+    type: humidity
+    unit: ''
+    address: 72
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 33
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.808426Z'
+    updated_at: null
+  - code: falla_variador_sec4
+    name: Falla Variador SEC4
+    type: generic
+    unit: ''
+    address: 73
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 34
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.811891Z'
+    updated_at: null
+  - code: programa_no_cargado_sec4
+    name: Programa no Cargado SEC4
+    type: generic
+    unit: ''
+    address: 74
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 35
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.814521Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_n_cleo_sec4
+    name: Falla Sensor Temperatura Núcleo SEC4
+    type: temperature
+    unit: ''
+    address: 75
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 36
+    plc_id: 1
+    created_at: '2025-11-25T00:19:02.817214Z'
+    updated_at: null
+  - code: temperatura_ducto_medida_sec5
+    name: Temperatura Ducto Medida SEC5
+    type: temperature
+    unit: °C
+    address: 709
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 37
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.846528Z'
+    updated_at: null
+  - code: temperatura_n_cleo_medida_sec5
+    name: Temperatura Núcleo Medida SEC5
+    type: temperature
+    unit: °C
+    address: 712
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 38
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.850066Z'
+    updated_at: null
+  - code: temperatura_set_sec5
+    name: Temperatura SET SEC5
+    type: temperature
+    unit: °C
+    address: 905
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 39
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.852683Z'
+    updated_at: null
+  - code: humedad_medida_sec5
+    name: Humedad Medida SEC5
+    type: humidity
+    unit: '%'
+    address: 715
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 40
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.855270Z'
+    updated_at: null
+  - code: humedad_set_sec5
+    name: Humedad SET SEC5
+    type: humidity
+    unit: '%'
+    address: 852
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 41
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.857951Z'
+    updated_at: null
+  - code: tiempo_medido_sec5
+    name: Tiempo Medido SEC5
+    type: generic
+    unit: Min
+    address: 2984
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 42
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.860694Z'
+    updated_at: null
+  - code: tiempo_set_sec5
+    name: Tiempo SET SEC5
+    type: generic
+    unit: Min
+    address: 2986
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 43
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.863206Z'
+    updated_at: null
+  - code: velocidad_medida_sec5
+    name: Velocidad Medida SEC5
+    type: speed
+    unit: '%'
+    address: 502
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 44
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.865886Z'
+    updated_at: null
+  - code: etapa_sec5
+    name: Etapa SEC5
+    type: generic
+    unit: / 13
+    address: 538
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 45
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.868543Z'
+    updated_at: null
+  - code: programa_sec5
+    name: Programa SEC5
+    type: generic
+    unit: ''
+    address: 336
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 46
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.871203Z'
+    updated_at: null
+  - code: arranque_secadero_5
+    name: Arranque Secadero 5
+    type: generic
+    unit: ''
+    address: 41
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 47
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.874623Z'
+    updated_at: null
+  - code: rt_1_secadero_5
+    name: RT 1 Secadero 5
+    type: generic
+    unit: ''
+    address: 45
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 48
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.878006Z'
+    updated_at: null
+  - code: rt_2_secadero_5
+    name: RT 2 Secadero 5
+    type: generic
+    unit: ''
+    address: 46
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 49
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.882775Z'
+    updated_at: null
+  - code: pid_fr_o_sec5
+    name: PID Frío SEC5
+    type: generic
+    unit: ''
+    address: 53
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 50
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.887508Z'
+    updated_at: null
+  - code: pid_calor_sec5
+    name: PID Calor SEC5
+    type: generic
+    unit: ''
+    address: 54
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 51
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.891144Z'
+    updated_at: null
+  - code: pausa_sec5
+    name: Pausa SEC5
+    type: generic
+    unit: ''
+    address: 58
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 52
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.894161Z'
+    updated_at: null
+  - code: deshielo_sec5
+    name: Deshielo SEC5
+    type: generic
+    unit: ''
+    address: 61
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 53
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.897284Z'
+    updated_at: null
+  - code: alarma_sec5
+    name: Alarma SEC5
+    type: generic
+    unit: ''
+    address: 64
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 54
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.900374Z'
+    updated_at: null
+  - code: paso_etapa_sec5
+    name: Paso Etapa SEC5
+    type: generic
+    unit: ''
+    address: 95
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 55
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.903275Z'
+    updated_at: null
+  - code: calor_secadero_5
+    name: Calor Secadero 5
+    type: generic
+    unit: ''
+    address: 1
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 56
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.906121Z'
+    updated_at: null
+  - code: fr_o_secadero_5
+    name: Frío Secadero 5
+    type: generic
+    unit: ''
+    address: 4
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 57
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.909236Z'
+    updated_at: null
+  - code: aspiraci_n_secadero_5
+    name: Aspiración Secadero 5
+    type: generic
+    unit: ''
+    address: 7
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 58
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.912187Z'
+    updated_at: null
+  - code: comando_variador_secadero_5
+    name: Comando Variador Secadero 5
+    type: generic
+    unit: ''
+    address: 13
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 59
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.915186Z'
+    updated_at: null
+  - code: velocidad_nula_sec5
+    name: Velocidad Nula SEC5
+    type: speed
+    unit: ''
+    address: 76
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 60
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.918214Z'
+    updated_at: null
+  - code: rel_t_rmico_n_1_sec5
+    name: Relé Térmico N°1 SEC5
+    type: generic
+    unit: ''
+    address: 77
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 61
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.921108Z'
+    updated_at: null
+  - code: rel_t_rmico_n_2_sec5
+    name: Relé Térmico N°2 SEC5
+    type: generic
+    unit: ''
+    address: 78
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 62
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.924157Z'
+    updated_at: null
+  - code: falla_comando_variador_sec5
+    name: Falla Comando Variador SEC5
+    type: generic
+    unit: ''
+    address: 79
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 63
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.927329Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_ducto_sec5
+    name: Falla Sensor Temperatura Ducto SEC5
+    type: temperature
+    unit: ''
+    address: 80
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 64
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.930746Z'
+    updated_at: null
+  - code: falla_sensor_humedad_sec5
+    name: Falla Sensor Humedad SEC5
+    type: humidity
+    unit: ''
+    address: 81
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 65
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.933865Z'
+    updated_at: null
+  - code: falla_variador_sec5
+    name: Falla Variador SEC5
+    type: generic
+    unit: ''
+    address: 82
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 66
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.936796Z'
+    updated_at: null
+  - code: programa_no_cargado_sec5
+    name: Programa no Cargado SEC5
+    type: generic
+    unit: ''
+    address: 83
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 67
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.939685Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_n_cleo_sec5
+    name: Falla Sensor Temperatura Núcleo SEC5
+    type: temperature
+    unit: ''
+    address: 84
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 68
+    plc_id: 2
+    created_at: '2025-11-25T00:19:02.942563Z'
+    updated_at: null
+  - code: temperatura_ducto_medida_sec6
+    name: Temperatura Ducto Medida SEC6
+    type: temperature
+    unit: °C
+    address: 718
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 69
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.974129Z'
+    updated_at: null
+  - code: temperatura_n_cleo_medida_sec6
+    name: Temperatura Núcleo Medida SEC6
+    type: temperature
+    unit: °C
+    address: 721
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 70
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.978452Z'
+    updated_at: null
+  - code: temperatura_set_sec6
+    name: Temperatura SET SEC6
+    type: temperature
+    unit: °C
+    address: 910
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 71
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.981712Z'
+    updated_at: null
+  - code: humedad_medida_sec6
+    name: Humedad Medida SEC6
+    type: humidity
+    unit: '%'
+    address: 724
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 72
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.984797Z'
+    updated_at: null
+  - code: humedad_set_sec6
+    name: Humedad SET SEC6
+    type: humidity
+    unit: '%'
+    address: 854
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 73
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.987981Z'
+    updated_at: null
+  - code: tiempo_medido_sec6
+    name: Tiempo Medido SEC6
+    type: generic
+    unit: Min
+    address: 2988
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 74
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.990892Z'
+    updated_at: null
+  - code: tiempo_set_sec6
+    name: Tiempo SET SEC6
+    type: generic
+    unit: Min
+    address: 2990
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 75
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.993703Z'
+    updated_at: null
+  - code: velocidad_medida_sec6
+    name: Velocidad Medida SEC6
+    type: speed
+    unit: '%'
+    address: 504
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 76
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.996619Z'
+    updated_at: null
+  - code: etapa_sec6
+    name: Etapa SEC6
+    type: generic
+    unit: / 13
+    address: 540
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 77
+    plc_id: 3
+    created_at: '2025-11-25T00:19:02.999506Z'
+    updated_at: null
+  - code: programa_sec6
+    name: Programa SEC6
+    type: generic
+    unit: ''
+    address: 338
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 78
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.002312Z'
+    updated_at: null
+  - code: arranque_secadero_6
+    name: Arranque Secadero 6
+    type: generic
+    unit: ''
+    address: 42
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 79
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.005279Z'
+    updated_at: null
+  - code: rt_1_secadero_6
+    name: RT 1 Secadero 6
+    type: generic
+    unit: ''
+    address: 47
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 80
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.008542Z'
+    updated_at: null
+  - code: rt_2_secadero_6
+    name: RT 2 Secadero 6
+    type: generic
+    unit: ''
+    address: 49
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 81
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.012530Z'
+    updated_at: null
+  - code: pid_fr_o_sec6
+    name: PID Frío SEC6
+    type: generic
+    unit: ''
+    address: 55
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 82
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.015637Z'
+    updated_at: null
+  - code: pid_calor_sec6
+    name: PID Calor SEC6
+    type: generic
+    unit: ''
+    address: 56
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 83
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.018540Z'
+    updated_at: null
+  - code: pausa_sec6
+    name: Pausa SEC6
+    type: generic
+    unit: ''
+    address: 59
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 84
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.021506Z'
+    updated_at: null
+  - code: deshielo_sec6
+    name: Deshielo SEC6
+    type: generic
+    unit: ''
+    address: 62
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 85
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.024384Z'
+    updated_at: null
+  - code: alarma_sec6
+    name: Alarma SEC6
+    type: generic
+    unit: ''
+    address: 65
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 86
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.027340Z'
+    updated_at: null
+  - code: paso_etapa_sec6
+    name: Paso Etapa SEC6
+    type: generic
+    unit: ''
+    address: 96
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 87
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.030206Z'
+    updated_at: null
+  - code: calor_secadero_6
+    name: Calor Secadero 6
+    type: generic
+    unit: ''
+    address: 2
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 88
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.033147Z'
+    updated_at: null
+  - code: fr_o_secadero_6
+    name: Frío Secadero 6
+    type: generic
+    unit: ''
+    address: 5
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 89
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.036035Z'
+    updated_at: null
+  - code: aspiraci_n_secadero_6
+    name: Aspiración Secadero 6
+    type: generic
+    unit: ''
+    address: 8
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 90
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.038876Z'
+    updated_at: null
+  - code: comando_variador_secadero_6
+    name: Comando Variador Secadero 6
+    type: generic
+    unit: ''
+    address: 14
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 91
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.041869Z'
+    updated_at: null
+  - code: velocidad_nula_sec6
+    name: Velocidad Nula SEC6
+    type: speed
+    unit: ''
+    address: 85
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 92
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.044954Z'
+    updated_at: null
+  - code: rel_t_rmico_n_1_sec6
+    name: Relé Térmico N°1 SEC6
+    type: generic
+    unit: ''
+    address: 86
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 93
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.047910Z'
+    updated_at: null
+  - code: rel_t_rmico_n_2_sec6
+    name: Relé Térmico N°2 SEC6
+    type: generic
+    unit: ''
+    address: 87
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 94
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.050916Z'
+    updated_at: null
+  - code: falla_comando_variador_sec6
+    name: Falla Comando Variador SEC6
+    type: generic
+    unit: ''
+    address: 88
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 95
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.053656Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_ducto_sec6
+    name: Falla Sensor Temperatura Ducto SEC6
+    type: temperature
+    unit: ''
+    address: 89
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 96
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.056615Z'
+    updated_at: null
+  - code: falla_sensor_humedad_sec6
+    name: Falla Sensor Humedad SEC6
+    type: humidity
+    unit: ''
+    address: 90
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 97
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.059496Z'
+    updated_at: null
+  - code: falla_variador_sec6
+    name: Falla Variador SEC6
+    type: generic
+    unit: ''
+    address: 91
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 98
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.062310Z'
+    updated_at: null
+  - code: programa_no_cargado_sec6
+    name: Programa no Cargado SEC6
+    type: generic
+    unit: ''
+    address: 92
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 99
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.065292Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_n_cleo_sec6
+    name: Falla Sensor Temperatura Núcleo SEC6
+    type: temperature
+    unit: ''
+    address: 93
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 100
+    plc_id: 3
+    created_at: '2025-11-25T00:19:03.068269Z'
+    updated_at: null
+  - code: temperatura_medida_sec21
+    name: Temperatura Medida SEC21
+    type: temperature
+    unit: °C
+    address: 866
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 101
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.017143Z'
+    updated_at: null
+  - code: temperatura_set_sec21
+    name: Temperatura SET SEC21
+    type: temperature
+    unit: °C
+    address: 900
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 102
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.028259Z'
+    updated_at: null
+  - code: humedad_medida_sec21
+    name: Humedad Medida SEC21
+    type: humidity
+    unit: '%'
+    address: 1556
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 103
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.031754Z'
+    updated_at: null
+  - code: humedad_set_sec21
+    name: Humedad SET SEC21
+    type: humidity
+    unit: '%'
+    address: 858
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 104
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.035226Z'
+    updated_at: null
+  - code: velocidad_sec21
+    name: Velocidad SEC21
+    type: speed
+    unit: '%'
+    address: 500
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: float32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 105
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.038431Z'
+    updated_at: null
+  - code: tiempo_medido_sec21
+    name: Tiempo Medido SEC21
+    type: generic
+    unit: Min
+    address: 5006
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 106
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.041493Z'
+    updated_at: null
+  - code: tiempo_set_sec21
+    name: Tiempo SET SEC21
+    type: generic
+    unit: Min
+    address: 5100
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: uint32
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 107
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.044479Z'
+    updated_at: null
+  - code: etapa_sec21
+    name: Etapa SEC21
+    type: generic
+    unit: / 13
+    address: 554
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 108
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.047188Z'
+    updated_at: null
+  - code: programa_sec21
+    name: Programa SEC21
+    type: generic
+    unit: ''
+    address: 334
+    function_code: 3
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 109
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.049910Z'
+    updated_at: null
+  - code: arranque_secadero_21
+    name: Arranque Secadero 21
+    type: generic
+    unit: ''
+    address: 82
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 110
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.052514Z'
+    updated_at: null
+  - code: rt_1_secadero_21
+    name: RT 1 Secadero 21
+    type: generic
+    unit: ''
+    address: 84
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 111
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.055343Z'
+    updated_at: null
+  - code: rt_2_secadero_21
+    name: RT 2 Secadero 21
+    type: generic
+    unit: ''
+    address: 40
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 112
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.058119Z'
+    updated_at: null
+  - code: pausa_sec21
+    name: Pausa SEC21
+    type: generic
+    unit: ''
+    address: 85
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 113
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.060916Z'
+    updated_at: null
+  - code: paso_etapa_sec21
+    name: Paso Etapa SEC21
+    type: generic
+    unit: ''
+    address: 89
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 114
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.063847Z'
+    updated_at: null
+  - code: deshielo_sec21
+    name: Deshielo SEC21
+    type: generic
+    unit: ''
+    address: 93
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 115
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.067012Z'
+    updated_at: null
+  - code: calor_secadero_21
+    name: Calor Secadero 21
+    type: generic
+    unit: ''
+    address: 0
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 116
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.071229Z'
+    updated_at: null
+  - code: fr_o_secadero_21
+    name: Frío Secadero 21
+    type: generic
+    unit: ''
+    address: 4
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 117
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.075353Z'
+    updated_at: null
+  - code: humectaci_n_secadero_21
+    name: Humectación Secadero 21
+    type: generic
+    unit: ''
+    address: 8
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 118
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.078997Z'
+    updated_at: null
+  - code: aire_secadero_21
+    name: Aire Secadero 21
+    type: generic
+    unit: ''
+    address: 12
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 119
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.082937Z'
+    updated_at: null
+  - code: lluvia_secadero_21
+    name: Lluvia Secadero 21
+    type: generic
+    unit: ''
+    address: 16
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 120
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.086050Z'
+    updated_at: null
+  - code: humo_secadero_21
+    name: Humo Secadero 21
+    type: generic
+    unit: ''
+    address: 20
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 121
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.088904Z'
+    updated_at: null
+  - code: comando_secadero_21
+    name: Comando Secadero 21
+    type: generic
+    unit: ''
+    address: 24
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 122
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.091649Z'
+    updated_at: null
+  - code: alarma_general_secaderos_21_24
+    name: Alarma General Secaderos 21-24
+    type: generic
+    unit: ''
+    address: 28
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 123
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.094400Z'
+    updated_at: null
+  - code: paro_emergencia_secaderos_21_24
+    name: Paro Emergencia Secaderos 21-24
+    type: generic
+    unit: ''
+    address: 43
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 124
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.097023Z'
+    updated_at: null
+  - code: velocidad_variador_sec21
+    name: Velocidad Variador SEC21
+    type: speed
+    unit: ''
+    address: 50
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 125
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.099683Z'
+    updated_at: null
+  - code: rel_t_rmico_n_1_sec21
+    name: Relé Térmico N°1 SEC21
+    type: generic
+    unit: ''
+    address: 51
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 126
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.102221Z'
+    updated_at: null
+  - code: rel_t_rmico_n_2_sec21
+    name: Relé Térmico N°2 SEC21
+    type: generic
+    unit: ''
+    address: 52
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 127
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.104910Z'
+    updated_at: null
+  - code: falla_variador_sec21
+    name: Falla Variador SEC21
+    type: generic
+    unit: ''
+    address: 53
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 128
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.107460Z'
+    updated_at: null
+  - code: falla_sensor_temperatura_sec21
+    name: Falla Sensor Temperatura SEC21
+    type: temperature
+    unit: ''
+    address: 54
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 129
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.110000Z'
+    updated_at: null
+  - code: falla_sensor_humedad_sec21
+    name: Falla Sensor Humedad SEC21
+    type: humidity
+    unit: ''
+    address: 55
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 130
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.113000Z'
+    updated_at: null
+  - code: programa_no_cargado_sec21
+    name: Programa no Cargado SEC21
+    type: generic
+    unit: ''
+    address: 98
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 131
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.115625Z'
+    updated_at: null
+  - code: alarma_en_secadero_21
+    name: Alarma en Secadero 21
+    type: generic
+    unit: ''
+    address: 56
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 132
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.118267Z'
+    updated_at: null
+  - code: secadero_21_on
+    name: Secadero 21 ON
+    type: generic
+    unit: ''
+    address: 78
+    function_code: 1
+    scale_factor: 1
+    offset: 0
+    data_type: int16
+    precision: 2
+    swap: null
+    is_discrete: false
+    id: 133
+    plc_id: 4
+    created_at: '2025-11-25T15:01:41.120870Z'
+    updated_at: null

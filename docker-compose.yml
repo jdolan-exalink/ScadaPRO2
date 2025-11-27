@@ -1,0 +1,173 @@
+version: '3.9'
+
+# ===========================================
+# SCADA Pro - Unified Docker Compose Stack
+# 
+# Services:
+# - db: PostgreSQL database
+# - mqtt: MQTT broker (Mosquitto)
+# - backend: FastAPI Industrial IoT Backend
+# - frontend: React SCADA Dashboard (Nginx)
+#
+# Networks:
+# - scada-network: Internal service communication
+#
+# Volumes:
+# - db_data: PostgreSQL persistent storage
+# - mqtt_data: MQTT broker data
+# ===========================================
+
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  db:
+    image: postgres:15-alpine
+    container_name: scada-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-backend}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-backend_password}
+      POSTGRES_DB: ${DB_NAME:-industrial}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - scada-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USER:-backend} -d ${DB_NAME:-industrial}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================
+  # MQTT Broker (Mosquitto)
+  # ===========================================
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: scada-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./backend/mosquitto/config:/mosquitto/config:ro
+      - mqtt_data:/mosquitto/data
+      - mqtt_logs:/mosquitto/log
+    networks:
+      - scada-network
+    healthcheck:
+      test:
+        - CMD
+        - mosquitto_sub
+        - -h
+        - localhost
+        - -t
+        - '$SYS/broker/clients/connected'
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # Backend - FastAPI Industrial IoT API
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: api/Dockerfile
+    image: ${BACKEND_IMAGE:-scada-backend:latest}
+    container_name: scada-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-backend}
+      DB_PASSWORD: ${DB_PASSWORD:-backend_password}
+      DB_NAME: ${DB_NAME:-industrial}
+      # MQTT Configuration
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      # API Configuration
+      API_TOKEN: ${API_TOKEN}
+      # Python Environment
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./backend/config:/app/config:ro
+      - ./backend/api/migrations:/app/migrations
+    ports:
+      - "8000:8000"
+    networks:
+      - scada-network
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8000/api/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================
+  # Frontend - React SCADA Dashboard
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:-scada-frontend:latest}
+    container_name: scada-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # Backend URL for frontend API calls
+      VITE_BACKEND_URL: http://backend:8000
+      # API Token (optional, for authenticated requests)
+      VITE_API_TOKEN: ${API_TOKEN}
+      # Environment
+      NODE_ENV: production
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Optional: Override nginx config if needed
+      # - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - scada-network
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:80/health
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  scada-network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+  mqtt_data:
+    driver: local
+  mqtt_logs:
+    driver: local

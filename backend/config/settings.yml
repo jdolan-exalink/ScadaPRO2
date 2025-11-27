@@ -1,0 +1,20 @@
+database:
+  host: db
+  port: 5432
+  user: backend
+  password: backend_pass
+  name: industrial
+  driver: postgresql+asyncpg
+mqtt:
+  host: mqtt
+  port: 1883
+  keepalive: 60
+machines:
+#- machines/bombo1.yml
+- machines/sec21.yml
+#- machines/sec22.yml
+#- machines/sec23.yml
+- machines/sec24.yml
+#- machines/sec4.yml
+#- machines/sec5.yml
+#- machines/sec6.yml

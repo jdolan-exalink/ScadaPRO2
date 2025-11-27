@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_USER: backend
+      POSTGRES_PASSWORD: backend_pass
+      POSTGRES_DB: industrial
+    volumes:
+      - ./DB:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backend -d industrial"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mqtt:
+    image: eclipse-mosquitto
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+
+  collector:
+    build: ./collector
+    environment:
+      CONFIG_PATH: /app/config
+    volumes:
+      - ./config:/app/config
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+
+  api:
+    build: ./api
+    environment:
+      CONFIG_PATH: /app/config
+      JWT_SECRET: "cambiar_esto_por_un_secreto_seguro"
+    volumes:
+      - ./config:/app/config
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+

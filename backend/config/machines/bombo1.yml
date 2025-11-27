@@ -1,0 +1,124 @@
+machine:
+  code: bombo1
+  name: Bombo 1
+plc:
+  code: bombo1_plc
+  name: PLC Bombo 1
+  protocol: modbus_tcp
+  ip_address: 192.168.72.11
+  port: 502
+  unit_id: 1
+  poll_interval_s: 1
+  enabled: true
+
+# ===== ESTADO PRINCIPAL DE LA MÁQUINA =====
+# Indicador ON/OFF visible y crítico - mostrar en ROJO cuando está OFF
+machine_status:
+- code: bombo_1_on
+  name: Bombo 1 ON
+  type: boolean
+  unit: ''
+  address: 64
+  function_code: 1
+  display_format: boolean
+  critical: true
+  color_off: '#FF0000'  # Rojo cuando está OFF
+  color_on: '#00FF00'   # Verde cuando está ON
+
+# ===== SENSORES OPERACIONALES =====
+sensors:
+- code: velocidad_bombo1
+  name: Velocidad Bombo 1
+  type: speed
+  unit: '%'
+  address: 507
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: tiempo_medido_bombo1
+  name: Tiempo Medido Bombo 1
+  type: generic
+  unit: Min
+  address: 5020
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint32
+  swap: word
+- code: tiempo_set_bombo1
+  name: Tiempo SET Bombo 1
+  type: generic
+  unit: Min
+  address: 5108
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: arranque_bombo1
+  name: Arranque Bombo 1
+  type: boolean
+  unit: ''
+  address: 114
+  function_code: 1
+  scale_factor: 1.0
+  offset: 0.0
+
+# ===== ALARMAS Y FALLAS =====
+# Las fallas se guardan en BD con timestamp de activación y desactivación
+alarms:
+- code: falla_motor_bombo1
+  name: Falla Motor Bombo 1
+  type: boolean
+  unit: ''
+  address: 115
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'  # Rojo cuando está activa
+  store_in_db: true
+  timestamp_on: true   # Guardar fecha/hora de activación
+  timestamp_off: true  # Guardar fecha/hora de desactivación
+  
+- code: falla_sensor_bombo1
+  name: Falla Sensor Bombo 1
+  type: boolean
+  unit: ''
+  address: 116
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: sobrecarga_bombo1
+  name: Sobrecarga Bombo 1
+  type: boolean
+  unit: ''
+  address: 117
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: paro_emergencia_bombo
+  name: Paro Emergencia Bombo
+  type: boolean
+  unit: ''
+  address: 43
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: critical
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true

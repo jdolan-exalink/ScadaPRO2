@@ -1,0 +1,18 @@
+collector:
+  host: 10.147.18.10
+  port: 8000
+  token: Ya_3n2CUIdhUbvV1hkT8SMb-TH8rGp1N0rxng9y6dqI
+  enabled: true
+mqtt:
+  broker_url: mqtt://10.147.18.10:1883
+  mqtt_host: 10.147.18.10
+  mqtt_port: 1883
+  topic: machines/#
+  enabled: true
+database:
+  host: 10.147.18.10
+  port: 5432
+  user: backend
+  password: backend_pass
+  name: industrial
+  driver: postgresql+asyncpg

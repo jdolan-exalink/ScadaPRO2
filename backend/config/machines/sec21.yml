@@ -1,0 +1,303 @@
+machine:
+  code: sec21
+  name: Secadora 21
+plc:
+  code: sec21_plc
+  name: PLC Secadora 21
+  protocol: modbus_tcp
+  ip_address: 192.168.72.11
+  port: 502
+  unit_id: 1
+  poll_interval_s: 1
+  enabled: true
+
+# ===== ESTADO PRINCIPAL DE LA MÁQUINA =====
+# Indicador ON/OFF visible y crítico - mostrar en ROJO cuando está OFF
+machine_status:
+- code: secadero_21_on
+  name: Secadero 21 ON
+  type: boolean
+  unit: ''
+  address: 78
+  function_code: 1
+  display_format: boolean
+  critical: true
+  color_off: '#FF0000'  # Rojo cuando está OFF
+  color_on: '#00FF00'   # Verde cuando está ON
+
+# ===== SENSORES OPERACIONALES =====
+sensors:
+- code: temperatura_medida_sec21
+  name: Temperatura Medida SEC21
+  type: temperature
+  unit: °C
+  address: 866
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: temperatura_set_sec21
+  name: Temperatura SET SEC21
+  type: temperature
+  unit: °C
+  address: 900
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: humedad_medida_sec21
+  name: Humedad Medida SEC21
+  type: humidity
+  unit: '%'
+  address: 1556
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: humedad_set_sec21
+  name: Humedad SET SEC21
+  type: humidity
+  unit: '%'
+  address: 858
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: velocidad_sec21
+  name: Velocidad SEC21
+  type: speed
+  unit: '%'
+  address: 500
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: tiempo_medido_sec21
+  name: Tiempo Medido SEC21
+  type: generic
+  unit: Min
+  address: 5006
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint32
+  swap: word
+- code: tiempo_set_sec21
+  name: Tiempo SET SEC21
+  type: generic
+  unit: Min
+  address: 5100
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  data_type: uint16
+- code: etapa_sec21
+  name: Etapa SEC21
+  type: generic
+  unit: / 13
+  address: 554
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+- code: programa_sec21
+  name: Programa SEC21
+  type: program
+  unit: ''
+  address: 334
+  function_code: 3
+  scale_factor: 1.0
+  offset: 0.0
+  display_format: mapped
+  value_map:
+    1: "Milan Economico"
+    2: "Eco/Crespo Cant"
+    3: "Milan Normal"
+    4: "Salamines"
+    5: "Bondiola"
+    6: "Camaras"
+- code: arranque_secadero_21
+  name: Arranque Secadero 21
+  type: boolean
+  unit: ''
+  address: 82
+  function_code: 1
+  scale_factor: 1.0
+  offset: 0.0
+- code: rt_1_secadero_21
+  name: RT 1 Secadero 21
+  type: boolean
+  unit: ''
+  address: 84
+  function_code: 1
+  display_format: boolean
+- code: rt_2_secadero_21
+  name: RT 2 Secadero 21
+  type: boolean
+  unit: ''
+  address: 40
+  function_code: 1
+  display_format: boolean
+- code: pausa_sec21
+  name: Pausa SEC21
+  type: boolean
+  unit: ''
+  address: 85
+  function_code: 1
+  display_format: boolean
+- code: paso_etapa_sec21
+  name: Paso Etapa SEC21
+  type: boolean
+  unit: ''
+  address: 89
+  function_code: 1
+  display_format: boolean
+- code: deshielo_sec21
+  name: Deshielo SEC21
+  type: boolean
+  unit: ''
+  address: 93
+  function_code: 1
+  display_format: boolean
+- code: calor_secadero_21
+  name: Calor Secadero 21
+  type: boolean
+  unit: ''
+  address: 0
+  function_code: 1
+  display_format: boolean
+- code: fr_o_secadero_21
+  name: Frío Secadero 21
+  type: boolean
+  unit: ''
+  address: 4
+  function_code: 1
+  display_format: boolean
+- code: humectaci_n_secadero_21
+  name: Humectación Secadero 21
+  type: boolean
+  unit: ''
+  address: 8
+  function_code: 1
+  display_format: boolean
+- code: aire_secadero_21
+  name: Aire Secadero 21
+  type: boolean
+  unit: ''
+  address: 12
+  function_code: 1
+  display_format: boolean
+- code: lluvia_secadero_21
+  name: Lluvia Secadero 21
+  type: boolean
+  unit: ''
+  address: 16
+  function_code: 1
+  display_format: boolean
+- code: humo_secadero_21
+  name: Humo Secadero 21
+  type: boolean
+  unit: ''
+  address: 20
+  function_code: 1
+  display_format: boolean
+- code: comando_secadero_21
+  name: Comando Secadero 21
+  type: boolean
+  unit: ''
+  address: 24
+  function_code: 1
+  display_format: boolean
+- code: alarma_general_secaderos_21_24
+  name: Alarma General Secaderos 21-24
+  type: boolean
+  unit: ''
+  address: 28
+  function_code: 1
+  display_format: boolean
+- code: velocidad_variador_sec21
+  name: Velocidad Variador SEC21
+  type: boolean
+  unit: ''
+  address: 50
+  function_code: 1
+  display_format: boolean
+- code: rel_t_rmico_n_1_sec21
+  name: Relé Térmico N°1 SEC21
+  type: boolean
+  unit: ''
+  address: 51
+  function_code: 1
+  display_format: boolean
+- code: rel_t_rmico_n_2_sec21
+  name: Relé Térmico N°2 SEC21
+  type: boolean
+  unit: ''
+  address: 52
+  function_code: 1
+  display_format: boolean
+- code: programa_no_cargado_sec21
+  name: Programa no Cargado SEC21
+  type: boolean
+  unit: ''
+  address: 98
+  function_code: 1
+  display_format: boolean
+
+# ===== ALARMAS Y FALLAS =====
+# Las fallas se guardan en BD con timestamp de activación y desactivación
+alarms:
+- code: falla_variador_sec21
+  name: Falla Variador SEC21
+  type: boolean
+  unit: ''
+  address: 53
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'  # Rojo cuando está activa
+  store_in_db: true
+  timestamp_on: true   # Guardar fecha/hora de activación
+  timestamp_off: true  # Guardar fecha/hora de desactivación
+  
+- code: falla_sensor_temperatura_sec21
+  name: Falla Sensor Temperatura SEC21
+  type: boolean
+  unit: ''
+  address: 54
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: falla_sensor_humedad_sec21
+  name: Falla Sensor Humedad SEC21
+  type: boolean
+  unit: ''
+  address: 55
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: high
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true
+  
+- code: paro_emergencia_secaderos_21_24
+  name: Paro Emergencia Secaderos 21-24
+  type: boolean
+  unit: ''
+  address: 43
+  function_code: 1
+  display_format: boolean
+  is_alarm: true
+  severity: critical
+  color: '#FF0000'
+  store_in_db: true
+  timestamp_on: true
+  timestamp_off: true

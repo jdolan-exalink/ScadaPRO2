@@ -1,0 +1,242 @@
+# Environment & Configuration
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.iml
+*.iws
+*.ipr
+.vscode-server/
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+.env.swp
+
+# Build & Compilation
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+docker/volumes/
+.dockerignore
+docker-compose.override.yml
+
+# Database backups
+*.sql
+*.sql.gz
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Sensitive data
+*.key
+*.pem
+*.pfx
+*.p12
+secrets/
+credentials/
+api_token.txt
+
+# Testing
+*.spec.ts
+*.spec.tsx
+coverage/
+test-results/
+
+# Package files
+package-lock.json
+yarn.lock
+pip-freeze.txt
+
+# Frontend specific
+frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/node_modules/
+frontend/.cache/
+frontend/.vercel
+
+# Backend specific
+backend/.env
+backend/.env.local
+backend/migrations/__pycache__/
+backend/migrations/*.pyc
+backend/.pytest_cache/
+backend/htmlcov/
+backend/alembic/versions/__pycache__/
+
+# API
+backend/api/.pytest_cache/
+backend/api/__pycache__/
+backend/api/*.pyc
+
+# Collector
+backend/collector/__pycache__/
+backend/collector/*.pyc
+
+# Data directories
+/data/
+/cache/
+/tmp/
+
+# Configuration
+config/*.txt
+config/api_token.txt
+!config/settings.yml
+!config/machines/
+
+# Docker volumes
+postgres_data/
+mqtt_data/
+backend_logs/
+
+# Compiled files
+*.o
+*.a
+*.so
+.so
+
+# IDE cache
+.cache/
+.parcel-cache/
+
+# NextJS
+.next/
+out/
+
+# Vite
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Prettier
+.prettierignore
+
+# ESLint
+.eslintcache
+
+# NX
+dist/
+.nx/
+
+# Environment-specific
+local.conf
+local-config.json
+
+# Backup files
+*.backup
+*.bak
+*.swp
+*.swo
+*~
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Media files (if not needed in repo)
+*.mp4
+*.mov
+*.avi
+*.flv
+
+# Any local override files
+docker-compose.local.yml
+docker-compose.override.yml
+.env.local.example
+
+# Miscellaneous
+.AppleDouble
+.LSOverride
+.apdisk
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.aTemplate
+ehthumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+
+# Keep these files
+!.gitkeep
+!.gitignore
+!.env.example

@@ -1,0 +1,5 @@
+{
+  "name": "Industrial SCADA Pro",
+  "description": "A multi-backend industrial SCADA frontend for real-time monitoring, historical analysis, and remote administration.",
+  "requestFramePermissions": []
+}

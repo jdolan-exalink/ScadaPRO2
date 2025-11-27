@@ -1,0 +1,30 @@
+version: '3.8'
+
+# ===========================================
+# Docker Compose - Solo Frontend
+# Usa cuando el backend ya está corriendo externamente
+# ===========================================
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scada-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Backend externo (ajustar según tu configuración)
+      - BACKEND_HOST=${BACKEND_HOST:-10.147.18.10}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+    volumes:
+      # Montar nginx.conf personalizado si es necesario
+      - ./nginx-external.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

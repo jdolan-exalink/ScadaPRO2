@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alarmas del Sistema</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header .stats {
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-group select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-group select:hover {
+            border-color: #2a5298;
+        }
+        
+        .filter-group select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .alarms-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .alarms-section.active-alarms {
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        }
+        
+        .section-title {
+            grid-column: 1 / -1;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alarm-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            border-left: 6px solid;
+            position: relative;
+        }
+        
+        .alarm-card.active-alarm {
+            border-left-color: #FF0000;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            box-shadow: 0 8px 25px rgba(255, 0, 0, 0.2);
+        }
+        
+        .alarm-card.inactive-alarm {
+            border-left-color: #999;
+            opacity: 0.8;
+        }
+        
+        .alarm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .alarm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .alarm-title {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .alarm-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .alarm-code {
+            font-size: 0.75rem;
+            color: #999;
+            font-family: 'Monaco', monospace;
+            text-transform: uppercase;
+        }
+        
+        .alarm-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-critical {
+            background: #FF0000;
+            color: white;
+        }
+        
+        .badge-high {
+            background: #FF6B6B;
+            color: white;
+        }
+        
+        .badge-medium {
+            background: #FFA500;
+            color: white;
+        }
+        
+        .badge-low {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .badge-active {
+            background: #FF0000;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .badge-inactive {
+            background: #ccc;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+            }
+        }
+        
+        .alarm-machine {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 10px 0;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+        }
+        
+        .alarm-times {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            color: #555;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 0;
+        }
+        
+        .time-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .time-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .time-value {
+            font-family: 'Monaco', monospace;
+            color: #666;
+        }
+        
+        .time-value.active {
+            color: #FF0000;
+            font-weight: 600;
+        }
+        
+        .alarm-duration {
+            background: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+        
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .table-title {
+            padding: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #555;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #FF0000;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-inactive {
+            background: #ccc;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            margin-top: 40px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                🚨 Centro de Alarmas del Sistema
+            </h1>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="activeCount">0</div>
+                    <div class="stat-label">Activas</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label for="machineFilter">Máquina</label>
+                <select id="machineFilter">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="severityFilter">Severidad</label>
+                <select id="severityFilter">
+                    <option value="">Todas</option>
+                    <option value="critical">Crítica</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Media</option>
+                    <option value="low">Baja</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Estado</label>
+                <select id="statusFilter">
+                    <option value="">Todas</option>
+                    <option value="1">Activas</option>
+                    <option value="0">Inactivas</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="alarms-section active-alarms">
+            <div class="section-title">
+                🔴 Alarmas Activas
+            </div>
+            <div id="activeAlarmsContainer">
+                <div class="empty-state">No hay alarmas activas</div>
+            </div>
+        </div>
+        
+        <div class="table-section">
+            <div class="table-title">📊 Historial de Alarmas</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Máquina</th>
+                        <th>Alarma</th>
+                        <th>Severidad</th>
+                        <th>Activación</th>
+                        <th>Desactivación</th>
+                        <th>Duración</th>
+                    </tr>
+                </thead>
+                <tbody id="alarmHistoryTable">
+                    <tr>
+                        <td colspan="7" class="loading">Cargando historial...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>Centro de Monitoreo de Alarmas | Actualizado automáticamente cada 5 segundos</p>
+            <p>Última actualización: <span id="lastUpdate">-</span></p>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/api';
+        let authToken = localStorage.getItem('auth_token') || '';
+        let allAlarms = [];
+        let allMachines = [];
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+        };
+        
+        async function fetchAlarms() {
+            try {
+                const response = await fetch(`${API_BASE}/alarms?limit=1000`, { headers });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                allAlarms = await response.json();
+                updateUI();
+            } catch (error) {
+                console.error('Error fetching alarms:', error);
+            }
+        }
+        
+        async function fetchMachines() {
+            try {
+                const response = await fetch(`${API_BASE}/machines`, { headers });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                allMachines = await response.json();
+                populateMachineFilter();
+            } catch (error) {
+                console.error('Error fetching machines:', error);
+            }
+        }
+        
+        function populateMachineFilter() {
+            const select = document.getElementById('machineFilter');
+            allMachines.forEach(machine => {
+                const option = document.createElement('option');
+                option.value = machine.code;
+                option.textContent = machine.name;
+                select.appendChild(option);
+            });
+        }
+        
+        function getFilters() {
+            return {
+                machine: document.getElementById('machineFilter').value,
+                severity: document.getElementById('severityFilter').value,
+                status: document.getElementById('statusFilter').value
+            };
+        }
+        
+        function filterAlarms(alarms) {
+            const filters = getFilters();
+            return alarms.filter(alarm => {
+                if (filters.machine && alarm.machine_code !== filters.machine) return false;
+                if (filters.severity && alarm.severity !== filters.severity) return false;
+                if (filters.status && alarm.status !== parseInt(filters.status)) return false;
+                return true;
+            });
+        }
+        
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        function calculateDuration(startDate, endDate) {
+            if (!endDate) return 'En curso';
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diff = end - start;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            if (minutes > 0) return `${minutes}m ${seconds}s`;
+            return `${seconds}s`;
+        }
+        
+        function getSeverityBadgeClass(severity) {
+            return `badge-${severity}`;
+        }
+        
+        function createAlarmCard(alarm) {
+            const isActive = alarm.status === 1;
+            const badge = alarm.status === 1 ? 'badge-active' : 'badge-inactive';
+            const statusText = alarm.status === 1 ? 'ACTIVA' : 'INACTIVA';
+            
+            const card = document.createElement('div');
+            card.className = `alarm-card ${isActive ? 'active-alarm' : 'inactive-alarm'}`;
+            
+            let durationHtml = '';
+            if (alarm.timestamp_off) {
+                durationHtml = `<div class="alarm-duration">Duración: ${calculateDuration(alarm.timestamp_on, alarm.timestamp_off)}</div>`;
+            }
+            
+            card.innerHTML = `
+                <div class="alarm-header">
+                    <div class="alarm-title">
+                        <div class="alarm-name">${alarm.alarm_name}</div>
+                        <div class="alarm-code">${alarm.alarm_code}</div>
+                    </div>
+                    <div>
+                        <span class="alarm-badge ${badge}">${statusText}</span>
+                        <br>
+                        <span class="alarm-badge ${getSeverityBadgeClass(alarm.severity)}">${alarm.severity.toUpperCase()}</span>
+                    </div>
+                </div>
+                <div class="alarm-machine">🏭 ${alarm.machine_name || alarm.machine_code}</div>
+                <div class="alarm-times">
+                    <div class="time-entry">
+                        <span class="time-label">Activación:</span>
+                        <span class="time-value ${isActive ? 'active' : ''}">${formatDateTime(alarm.timestamp_on)}</span>
+                    </div>
+                    ${alarm.timestamp_off ? `
+                    <div class="time-entry">
+                        <span class="time-label">Desactivación:</span>
+                        <span class="time-value">${formatDateTime(alarm.timestamp_off)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                ${durationHtml}
+            `;
+            
+            return card;
+        }
+        
+        function updateUI() {
+            const filtered = filterAlarms(allAlarms);
+            const activeAlarms = filtered.filter(a => a.status === 1);
+            
+            // Update stats
+            document.getElementById('activeCount').textContent = activeAlarms.length;
+            document.getElementById('totalCount').textContent = filtered.length;
+            
+            // Update active alarms section
+            const activeContainer = document.getElementById('activeAlarmsContainer');
+            if (activeAlarms.length === 0) {
+                activeContainer.innerHTML = '<div class="empty-state">✅ No hay alarmas activas</div>';
+            } else {
+                activeContainer.innerHTML = activeAlarms.map(createAlarmCard).map(el => el.outerHTML).join('');
+            }
+            
+            // Update history table
+            const tbody = document.getElementById('alarmHistoryTable');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">No hay alarmas para mostrar</td></tr>';
+            } else {
+                tbody.innerHTML = filtered.map(alarm => `
+                    <tr>
+                        <td>
+                            <span class="status-indicator ${alarm.status === 1 ? 'status-active' : 'status-inactive'}"></span>
+                            ${alarm.status === 1 ? 'ACTIVA' : 'INACTIVA'}
+                        </td>
+                        <td>${alarm.machine_name || alarm.machine_code}</td>
+                        <td><strong>${alarm.alarm_name}</strong></td>
+                        <td><span class="alarm-badge ${getSeverityBadgeClass(alarm.severity)}">${alarm.severity}</span></td>
+                        <td>${formatDateTime(alarm.timestamp_on)}</td>
+                        <td>${formatDateTime(alarm.timestamp_off)}</td>
+                        <td>${calculateDuration(alarm.timestamp_on, alarm.timestamp_off)}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('es-ES');
+        }
+        
+        // Event listeners
+        document.getElementById('machineFilter').addEventListener('change', updateUI);
+        document.getElementById('severityFilter').addEventListener('change', updateUI);
+        document.getElementById('statusFilter').addEventListener('change', updateUI);
+        
+        // Initialize
+        async function init() {
+            await fetchMachines();
+            await fetchAlarms();
+            // Refresh every 5 seconds
+            setInterval(fetchAlarms, 5000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

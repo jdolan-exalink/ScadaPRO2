@@ -1,0 +1,120 @@
+backends:
+  - id: default-10-147-18-10
+    name: Sodecar
+    description: Planta
+    httpBaseUrl: http://10.147.18.10:8000
+    wsUrl: ws://10.147.18.10:8000/ws/realtime
+    sshHost: 10.147.18.10
+    sshPort: 22
+    sshUsername: root
+    sshPassword: 'your_password_here'
+    composePath: '/root'
+    isDefault: true
+    status: online
+dashboards:
+  metrics:
+    - id: d1
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Temp. Ducto
+      unit: °C
+      setPoint: 0
+      value: 0
+      tolerance: 5
+    - id: d2
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Temp. Núcleo
+      unit: °C
+      setPoint: 0
+      value: 0
+      tolerance: 5
+    - id: d3
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Humedad
+      unit: '%'
+      setPoint: 0
+      value: 0
+      tolerance: 2
+    - id: d4
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Tiempo
+      unit: Min
+      setPoint: 0
+      value: 104464384
+      tolerance: 0
+    - id: d5
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Velocidad
+      unit: '%'
+      setPoint: 0
+      value: 0
+      tolerance: 0
+    - id: d6
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Etapa
+      unit: ''
+      setPoint: 13
+      value: 13
+      tolerance: 0
+    - id: d7
+      machineName: 'Secadora 4'
+      groupColor: '#ef4444'
+      label: Programa
+      unit: ''
+      setPoint: 0
+      value: 5
+      tolerance: 0
+layouts:
+  default:
+    widgets:
+      - id: w1
+        type: status
+        title: Estado Máquina
+        cols: 3
+      - id: w2
+        type: gauge
+        title: Temperatura
+        sensorCode: temp_main
+        cols: 3
+        config:
+          min: 0
+          max: 200
+          unit: °C
+      - id: w3
+        type: gauge
+        title: Presión
+        sensorCode: pressure_main
+        cols: 3
+        config:
+          min: 0
+          max: 100
+          unit: Bar
+      - id: w4
+        type: digital_io
+        title: Válvulas y Relés
+        cols: 3
+      - id: w5
+        type: line_chart
+        title: Tendencia Temp. (24h)
+        sensorCode: temp_main
+        cols: 8
+      - id: w6
+        type: action_button
+        title: Acciones Rápidas
+        plcCode: plc1
+        cols: 4
+        config:
+          actions:
+            - label: Reset Contador
+              address: 100
+            - label: Parada Emergencia
+              address: 0
+      - id: w7
+        type: logbook
+        title: Eventos Recientes
+        cols: 12

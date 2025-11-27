@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # Frontend - React/Vite SCADA Dashboard
+  # ===========================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scada-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - scada-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ===========================================
+  # Backend - Node.js SCADA Server
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-backend:latest}
+    container_name: scada-backend
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=${DB_USER:-backend}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-backend_pass}
+      - DATABASE_NAME=${DB_NAME:-industrial}
+      - MQTT_HOST=10.147.18.10
+      - MQTT_PORT=1883
+      - API_TOKEN=${API_TOKEN:-Ya_3n2CUIdhUbvV1hkT8SMb-TH8rGp1N0rxng9y6dqI}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - scada-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  db:
+    image: postgres:15-alpine
+    container_name: scada-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-backend}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-backend_pass}
+      - POSTGRES_DB=${DB_NAME:-industrial}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - scada-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-backend} -d ${DB_NAME:-industrial}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  scada-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

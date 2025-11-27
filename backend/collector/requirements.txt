@@ -1,0 +1,6 @@
+pymodbus==3.6.2
+paho-mqtt
+pyyaml
+sqlalchemy
+asyncpg
+psutil

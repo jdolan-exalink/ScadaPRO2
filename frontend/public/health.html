@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCADA Pro Health Check</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #2d3748;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #63b3ed;
+            margin-bottom: 20px;
+        }
+        .status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .healthy {
+            color: #48bb78;
+        }
+        .unhealthy {
+            color: #f56565;
+        }
+        .version {
+            font-size: 14px;
+            color: #a0aec0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏭 SCADA Pro</h1>
+        <div class="status healthy">✅ Frontend Service: Healthy</div>
+        <div class="status" id="backend-status">⏳ Checking Backend...</div>
+        <div class="version">Version 0.1.0</div>
+    </div>
+
+    <script>
+        // Simple health check for backend
+        fetch('/api/health', { method: 'GET', timeout: 5000 })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('backend-status').innerHTML = '✅ Backend Service: Healthy';
+                    document.getElementById('backend-status').className = 'status healthy';
+                } else {
+                    throw new Error('Backend not healthy');
+                }
+            })
+            .catch(error => {
+                document.getElementById('backend-status').innerHTML = '❌ Backend Service: Unhealthy';
+                document.getElementById('backend-status').className = 'status unhealthy';
+            });
+    </script>
+</body>
+</html>
