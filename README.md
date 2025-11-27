@@ -11,11 +11,12 @@
 
 ## 📖 Quick Links
 
-- **Getting Started**: [QUICKSTART.md](./QUICKSTART.md) (5 minutes)
-- **Full Documentation**: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)
-- **Deployment Guide**: [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md)
+- **Getting Started**: [QUICKSTART.md](./doc/QUICKSTART.md) (5 minutes)
+- **Full Documentation**: [DOCUMENTATION_INDEX.md](./doc/DOCUMENTATION_INDEX.md)
+- **Deployment Guide**: [DOCKER_DEPLOYMENT.md](./doc/DOCKER_DEPLOYMENT.md)
+- **Architecture**: [Architecture Documentation](./doc/ARCHITECTURE/00-README.md)
 - **API Documentation**: http://localhost:8000/docs (after starting)
-- **Integration Details**: [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)
+- **Integration Details**: [FRONTEND_INTEGRATION.md](./doc/FRONTEND_INTEGRATION.md)
 
 ---
 
@@ -140,22 +141,22 @@ docker-compose up -d --build
 ## 📚 Documentation
 
 ### Getting Started
-- [QUICKSTART.md](./QUICKSTART.md) - 5-minute setup guide
-- [NEXT_STEPS.md](./NEXT_STEPS.md) - Phased implementation plan
+- [QUICKSTART.md](./doc/QUICKSTART.md) - 5-minute setup guide
+- [NEXT_STEPS.md](./doc/NEXT_STEPS.md) - Phased implementation plan
 
 ### Deployment & Operations
-- [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md) - Complete deployment guide
-- [VERIFICATION_CHECKLIST.md](./VERIFICATION_CHECKLIST.md) - Testing procedures
-- [VERSION.md](./VERSION.md) - Release information
+- [DOCKER_DEPLOYMENT.md](./doc/DOCKER_DEPLOYMENT.md) - Complete deployment guide
+- [VERIFICATION_CHECKLIST.md](./doc/VERIFICATION_CHECKLIST.md) - Testing procedures
+- [VERSION.md](./doc/VERSION.md) - Release information
 
 ### Development & Integration
-- [FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md) - Frontend-backend integration
-- [CHANGELOG_INTEGRATION.md](./CHANGELOG_INTEGRATION.md) - Detailed change log
-- [LEGACY_DEPRECATION.md](./LEGACY_DEPRECATION.md) - Deprecated code information
+- [FRONTEND_INTEGRATION.md](./doc/FRONTEND_INTEGRATION.md) - Frontend-backend integration
+- [CHANGELOG_INTEGRATION.md](./doc/CHANGELOG_INTEGRATION.md) - Detailed change log
+- [LEGACY_DEPRECATION.md](./doc/LEGACY_DEPRECATION.md) - Deprecated code information
 
 ### Reference
-- [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) - Complete documentation index
-- [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) - Executive summary
+- [DOCUMENTATION_INDEX.md](./doc/DOCUMENTATION_INDEX.md) - Complete documentation index
+- [PROJECT_SUMMARY.md](./doc/PROJECT_SUMMARY.md) - Executive summary
 
 ### Backend Documentation (Reference)
 Located in `/backend/DOCS/`:

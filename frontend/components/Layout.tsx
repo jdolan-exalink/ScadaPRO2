@@ -1,12 +1,17 @@
 
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Factory, History, Settings, Menu, X, Server, Activity, BellRing, Database, Grid } from 'lucide-react';
+import { LayoutDashboard, Factory, History, Settings, Menu, X, Server, Activity, BellRing, Database, Grid, LogOut } from 'lucide-react';
 import { useAppContext } from '../App';
+import { useAuth } from '../features/auth/useAuth';
+
+const APP_VERSION = '0.1.0';
+
 
 export const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentBackend, backends, setCurrentBackend } = useAppContext();
+  const { logout, user } = useAuth();
   const location = useLocation();
 
   const navItems = [
@@ -40,9 +45,12 @@ export const Layout: React.FC = () => {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex items-center justify-between p-4 border-b border-scada-700 h-16">
-          <div className="flex items-center gap-2 text-scada-500">
-            <Activity className="h-8 w-8" />
-            <span className="font-bold text-xl tracking-tight text-white">SCADA<span className="text-scada-500">Pro</span></span>
+          <div>
+            <div className="flex items-center gap-2 text-scada-500">
+              <Activity className="h-8 w-8" />
+              <span className="font-bold text-xl tracking-tight text-white">SCADA<span className="text-scada-500">Pro</span></span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">v{APP_VERSION}</p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
             <X size={24} />
@@ -68,11 +76,24 @@ export const Layout: React.FC = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-scada-700">
+        <div className="absolute bottom-0 w-full p-4 border-t border-scada-700 space-y-3">
           <div className="flex items-center gap-3 text-slate-400 text-sm">
              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
              <span>Sistema Online</span>
           </div>
+          {user && (
+            <div className="text-xs text-slate-500 border-t border-scada-600 pt-3">
+              <p>Usuario: <span className="text-slate-400 font-medium">{user.username}</span></p>
+              <p>Rol: <span className="text-slate-400 font-medium capitalize">{user.role}</span></p>
+            </div>
+          )}
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-slate-400 hover:text-white hover:bg-scada-700 transition-colors text-sm"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
 
