@@ -1031,19 +1031,33 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Sensor not found")
     return sensor
 
-@app.get("/api/sensors/{sensor_id}/history", response_model=List[schemas.SensorDataPoint])
+@app.get("/api/sensors/{sensor_identifier}/history")
 async def get_sensor_history(
-    sensor_id: int,
+    sensor_identifier: str,
     start: datetime = Query(alias="from"),
     end: datetime = Query(alias="to"),
     db: AsyncSession = Depends(get_db)
 ):
-    # Basic history query, no aggregation for now
-    query = select(models.SensorData).where(
-        models.SensorData.sensor_id == sensor_id,
-        models.SensorData.timestamp >= start,
-        models.SensorData.timestamp <= end
-    ).order_by(models.SensorData.timestamp.asc())
+    # Support both numeric ID and sensor code
+    sensor_id = None
+    
+    try:
+        # Try to parse as numeric ID
+        sensor_id = int(sensor_identifier)
+        query = select(models.SensorData).where(
+            models.SensorData.sensor_id == sensor_id,
+            models.SensorData.timestamp >= start,
+            models.SensorData.timestamp <= end
+        ).order_by(models.SensorData.timestamp.asc())
+    except ValueError:
+        # Use as sensor code string
+        query = select(models.SensorData).join(
+            models.Sensor
+        ).where(
+            models.Sensor.code == sensor_identifier,
+            models.SensorData.timestamp >= start,
+            models.SensorData.timestamp <= end
+        ).order_by(models.SensorData.timestamp.asc())
     
     result = await db.execute(query)
     data = result.scalars().all()

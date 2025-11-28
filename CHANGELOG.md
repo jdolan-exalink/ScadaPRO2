@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-01-21
+
+### Fixed
+- ✅ **Sensor History Endpoint Parameter Compatibility**
+  - `/api/sensors/{sensor_identifier}/history` now accepts both numeric sensor ID and string sensor code
+  - Frontend can now query with either format:
+    - `/api/sensors/1/history` (numeric ID)
+    - `/api/sensors/temperatura_medida_sec21/history` (sensor code string)
+  - Automatic parameter type detection and appropriate database query routing
+  - Returns proper 200 OK responses for both parameter types
+
 ## [0.2.0] - 2025-11-28
 
 ### Added
@@ -47,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced `on_message` callback to parse and record MQTT metadata
 - Database queries now count total records from sensor_data table
 - Frontend type definitions updated for new fields (ip, total_records)
+- Removed authentication requirement from read-only endpoints (`/api/plcs`, `/api/sensors`, `/api/machines`, etc.)
+  - Allows frontend to load configuration data without authentication
+  - Maintains security for write operations (POST/PUT/PATCH/DELETE)
 
 ## [0.1.0] - 2025-01-27
 
