@@ -1,7 +1,7 @@
 {
   "name": "scada-pro2",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Industrial ScadaPRO2 - Modern web-based SCADA system for industrial monitoring and control",
   "type": "module",
   "scripts": {
