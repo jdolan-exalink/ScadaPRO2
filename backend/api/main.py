@@ -734,7 +734,7 @@ async def export_configuration(db: AsyncSession = Depends(get_db)):
     }
 
 # Machines
-@app.get("/api/machines", response_model=List[schemas.Machine], dependencies=[Depends(get_current_user)])
+@app.get("/api/machines", response_model=List[schemas.Machine])
 async def get_machines(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Machine))
     return result.scalars().all()
@@ -825,7 +825,7 @@ async def get_connected_machines(db: AsyncSession = Depends(get_db)):
             summary={'totalMachines': 0, 'activeMachines': 0, 'totalSensors': 0, 'totalMessages': 0}
         )
 
-@app.get("/api/machines/{machine_id}", response_model=schemas.Machine, dependencies=[Depends(get_current_user)])
+@app.get("/api/machines/{machine_id}", response_model=schemas.Machine)
 async def get_machine(machine_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Machine).where(models.Machine.id == machine_id))
     machine = result.scalar_one_or_none()
@@ -834,7 +834,7 @@ async def get_machine(machine_id: int, db: AsyncSession = Depends(get_db)):
     return machine
 
 # PLCs
-@app.get("/api/plcs", response_model=List[schemas.PLC], dependencies=[Depends(get_current_user)])
+@app.get("/api/plcs", response_model=List[schemas.PLC])
 async def get_plcs(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.PLC))
     return result.scalars().all()
@@ -863,7 +863,7 @@ async def update_plc(plc_id: int, plc_update: schemas.PLCUpdate, db: AsyncSessio
     return plc
 
 # Sensores
-@app.get("/api/sensors", response_model=List[schemas.Sensor], dependencies=[Depends(get_current_user)])
+@app.get("/api/sensors", response_model=List[schemas.Sensor])
 async def get_sensors(
     machine_code: Optional[str] = None,
     plc_code: Optional[str] = None,
@@ -963,7 +963,7 @@ async def get_sensors_values(db: AsyncSession = Depends(get_db)):
         logger.error(f"Error getting sensor values: {e}")
         return {'sensors': {}}
 
-@app.get("/api/sensors/mqtt-topics", response_model=List[schemas.SensorWithMQTT], dependencies=[Depends(get_current_user)])
+@app.get("/api/sensors/mqtt-topics", response_model=List[schemas.SensorWithMQTT])
 async def get_sensors_with_mqtt_topics(
     machine_code: Optional[str] = None,
     type: Optional[str] = None,
@@ -1023,7 +1023,7 @@ async def get_sensors_with_mqtt_topics(
     
     return sensors_with_mqtt
 
-@app.get("/api/sensors/{sensor_id}", response_model=schemas.Sensor, dependencies=[Depends(get_current_user)])
+@app.get("/api/sensors/{sensor_id}", response_model=schemas.Sensor)
 async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Sensor).where(models.Sensor.id == sensor_id))
     sensor = result.scalar_one_or_none()
@@ -1031,7 +1031,7 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Sensor not found")
     return sensor
 
-@app.get("/api/sensors/{sensor_id}/history", response_model=List[schemas.SensorDataPoint], dependencies=[Depends(get_current_user)])
+@app.get("/api/sensors/{sensor_id}/history", response_model=List[schemas.SensorDataPoint])
 async def get_sensor_history(
     sensor_id: int,
     start: datetime = Query(alias="from"),
