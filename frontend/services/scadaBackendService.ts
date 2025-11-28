@@ -221,7 +221,7 @@ class ScadaBackendService {
     type?: string;
   }): Promise<Sensor[]> {
     try {
-      let endpoint = '/sensors';
+      let endpoint = '/api/sensors';
       if (filters) {
         const params = new URLSearchParams();
         if (filters.machineCode) params.append('machine_code', filters.machineCode);
@@ -251,7 +251,7 @@ class ScadaBackendService {
     type?: string;
   }): Promise<SensorWithMQTT[]> {
     try {
-      let endpoint = '/sensors/mqtt-topics';
+      let endpoint = '/api/sensors/mqtt-topics';
       if (filters) {
         const params = new URLSearchParams();
         if (filters.machineCode) params.append('machine_code', filters.machineCode);
@@ -412,7 +412,7 @@ class ScadaBackendService {
     skip?: number;
   }): Promise<any[]> {
     try {
-      let endpoint = '/alarms';
+      let endpoint = '/api/alarms';
       if (filters) {
         const params = new URLSearchParams();
         if (filters.machineCode) params.append('machine_code', filters.machineCode);
@@ -444,7 +444,7 @@ class ScadaBackendService {
     severity?: string;
   }): Promise<any[]> {
     try {
-      let endpoint = '/alarms/active';
+      let endpoint = '/api/alarms/active';
       if (filters) {
         const params = new URLSearchParams();
         if (filters.machineCode) params.append('machine_code', filters.machineCode);
@@ -476,7 +476,7 @@ class ScadaBackendService {
     }
   ): Promise<any[]> {
     try {
-      let endpoint = `/machines/${machineId}/alarms`;
+      let endpoint = `/api/machines/${machineId}/alarms`;
       if (filters) {
         const params = new URLSearchParams();
         if (filters.status !== undefined) params.append('status', filters.status.toString());
@@ -527,7 +527,7 @@ class ScadaBackendService {
     skip?: number;
   }): Promise<any[]> {
     try {
-      let endpoint = '/logs';
+      let endpoint = '/api/logs';
       if (filters) {
         const params = new URLSearchParams();
         if (filters.level) params.append('level', filters.level);
