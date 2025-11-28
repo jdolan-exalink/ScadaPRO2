@@ -1183,7 +1183,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # ===== ALARMAS =====
 
-@app.get("/api/alarms", response_model=List[schemas.MachineAlarmResponse], dependencies=[Depends(get_current_user)])
+@app.get("/api/alarms", response_model=List[schemas.MachineAlarmResponse])
 async def get_all_alarms(
     machine_code: Optional[str] = None,
     severity: Optional[str] = None,
@@ -1247,7 +1247,7 @@ async def get_all_alarms(
     
     return alarms_response
 
-@app.get("/api/alarms/active", response_model=List[schemas.MachineAlarmResponse], dependencies=[Depends(get_current_user)])
+@app.get("/api/alarms/active", response_model=List[schemas.MachineAlarmResponse])
 async def get_active_alarms(
     machine_code: Optional[str] = None,
     severity: Optional[str] = None,
@@ -1304,7 +1304,7 @@ async def get_active_alarms(
     
     return alarms_response
 
-@app.get("/api/machines/{machine_id}/alarms", response_model=List[schemas.MachineAlarmHistory], dependencies=[Depends(get_current_user)])
+@app.get("/api/machines/{machine_id}/alarms", response_model=List[schemas.MachineAlarmHistory])
 async def get_machine_alarms(
     machine_id: int,
     status: Optional[int] = None,
