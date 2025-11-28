@@ -1034,10 +1034,16 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
 @app.get("/api/sensors/{sensor_identifier}/history")
 async def get_sensor_history(
     sensor_identifier: str,
-    start: datetime = Query(alias="from"),
-    end: datetime = Query(alias="to"),
+    start: datetime = Query(None, alias="from"),
+    end: datetime = Query(None, alias="to"),
+    hours: int = Query(6),
     db: AsyncSession = Depends(get_db)
 ):
+    # If start/end not provided, use hours parameter
+    if start is None or end is None:
+        end = datetime.utcnow()
+        start = end - timedelta(hours=hours)
+    
     # Support both numeric ID and sensor code
     sensor_id = None
     
