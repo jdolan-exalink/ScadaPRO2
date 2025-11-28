@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic parameter type detection and appropriate database query routing
   - Returns proper 200 OK responses for both parameter types
 
+- ✅ **Frontend API Endpoint Configuration Fixes**
+  - Fixed incorrect base URL (`/api/..`) causing 404 errors
+  - All API endpoints now correctly prefixed with `/api/`
+  - Fixed `/machines`, `/plcs`, `/sensors` endpoints returning HTML instead of JSON
+  - Improved base URL detection logic for production environments
+  - Frontend now correctly resolves relative URLs through nginx proxy
+
+- ✅ **Tailwind CSS Production Setup**
+  - Removed Tailwind CDN dependency (was showing browser console warning)
+  - Installed Tailwind CSS, PostCSS, and Autoprefixer as dev dependencies
+  - Created proper `tailwind.config.js` with custom scada color palette
+  - Created `postcss.config.js` for CSS processing pipeline
+  - Added `index.css` with Tailwind directives (@tailwind base/components/utilities)
+  - Tailwind CSS now compiled locally during build process
+  - Eliminated production warning about CDN usage
+
 ## [0.2.0] - 2025-11-28
 
 ### Added
