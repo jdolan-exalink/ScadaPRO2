@@ -1,6 +1,6 @@
-# 🚀 Quick Start - SCADA Pro Unified Stack
+# 🚀 Quick Start - ScadaPRO2 Unified Stack
 
-> **Get the complete SCADA Pro system running in 5 minutes**
+> **Get the complete ScadaPRO2 system running in 5 minutes**
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@
 ### Step 1: Prepare (1 min)
 
 ```bash
-cd ScadaPRO
+cd ScadaPRO2
 cp .env.example .env
 ```
 

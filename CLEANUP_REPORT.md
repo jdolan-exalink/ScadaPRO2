@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully completed comprehensive cleanup of legacy code and created detailed architecture documentation for SCADA Pro v0.1.0.
+Successfully completed comprehensive cleanup of legacy code and created detailed architecture documentation for ScadaPRO2 v0.2.0.
 
 ---
 

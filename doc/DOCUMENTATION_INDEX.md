@@ -1,6 +1,13 @@
-# 📚 SCADA Pro Documentation Index
+# 📚 ScadaPRO2 Documentation Index
 
-> **Complete documentation for the unified SCADA Pro system**
+> **Complete documentation for the unified ScadaPRO2 system**
+
+## 📖 Quick Start
+
+**New to the project?** 
+Start with [SESSION_SUMMARY.md](./SESSION_SUMMARY.md) to understand what's been implemented in v0.1.0.
+
+---
 
 ## 🚀 Getting Started
 
@@ -44,6 +51,15 @@
 ---
 
 ## 📖 Understanding the System
+
+### Project Status & Summaries
+- **[SESSION_SUMMARY.md](./SESSION_SUMMARY.md)** - Complete session accomplishments
+  - Files created and modified
+  - Statistics and metrics
+  - Verification completed
+  - Next steps for v0.2.0
+  - Commit history
+  - Key achievements
 
 ### Architecture & Design
 - **[FRONTEND_INTEGRATION.md](./FRONTEND_INTEGRATION.md)** - How frontend connects to backend

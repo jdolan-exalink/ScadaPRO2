@@ -1,8 +1,8 @@
-# 🏭 SCADA Pro v0.1.0
+# 🏭 ScadaPRO2 v0.2.0
 
 > **Industrial IoT Monitoring Dashboard with Real-time Sensor Integration**
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](./VERSION.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](./VERSION.md)
 [![Status](https://img.shields.io/badge/status-Production%20Ready-green.svg)](./VERSION.md)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](./LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](./docker-compose.yml)
@@ -32,7 +32,7 @@
 ```bash
 # 1. Clone and navigate
 git clone <repository-url>
-cd ScadaPRO
+cd ScadaPRO2
 
 # 2. Configure environment
 cp .env.example .env

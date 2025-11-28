@@ -1,6 +1,6 @@
-# 🏗️ SCADA Pro v0.1.0 - Architecture Documentation
+# 🏗️ ScadaPRO2 v0.2.0 - Architecture Documentation
 
-Complete architectural overview of the SCADA Pro v0.1.0 system including all components, data flows, and dependency relationships.
+Complete architectural overview of the ScadaPRO2 v0.2.0 system including all components, data flows, and dependency relationships.
 
 ## 📚 Documentation Structure
 

@@ -1,8 +1,8 @@
 {
-  "name": "scada-pro",
+  "name": "scada-pro2",
   "private": true,
   "version": "0.2.0",
-  "description": "Industrial SCADA Pro - Modern web-based SCADA system for industrial monitoring and control",
+  "description": "Industrial ScadaPRO2 - Modern web-based SCADA system for industrial monitoring and control",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
-    "docker:build": "docker build -t scada-pro:latest .",
-    "docker:run": "docker run -p 80:80 scada-pro:latest",
+    "docker:build": "docker build -t scada-pro2:latest .",
+    "docker:run": "docker run -p 80:80 scada-pro2:latest",
     "docker:compose:up": "docker-compose up -d",
     "docker:compose:down": "docker-compose down",
     "docker:compose:build": "docker-compose up -d --build",

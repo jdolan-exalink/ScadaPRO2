@@ -1,8 +1,8 @@
-# 🏭 SCADA Pro - Deployment & Integration Guide
+# 🏭 ScadaPRO2 - Deployment & Integration Guide
 
 > **Integrated Backend + Frontend Stack with Docker Compose**
 
-This document describes how to deploy the complete SCADA Pro system with the unified `docker-compose.yml`.
+This document describes how to deploy the complete ScadaPRO2 system with the unified `docker-compose.yml`.
 
 ## 📋 Table of Contents
 
@@ -57,7 +57,7 @@ cd frontend && npm run dev
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    SCADA Pro System                       │
+│                    ScadaPRO2 System                       │
 ├──────────────────────────────────────────────────────────┤
 │                                                            │
 │  ┌─────────────────────────────────────────────────────┐ │

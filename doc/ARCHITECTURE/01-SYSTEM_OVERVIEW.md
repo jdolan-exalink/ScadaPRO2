@@ -1,10 +1,10 @@
-# 01. SCADA Pro - System Overview
+# 01. ScadaPRO2 - System Overview
 
-High-level overview of the SCADA Pro v0.1.0 industrial IoT monitoring system.
+High-level overview of the ScadaPRO2 v0.2.0 industrial IoT monitoring system.
 
 ## 🎯 System Purpose
 
-SCADA Pro is a **production-ready industrial IoT monitoring dashboard** that collects, analyzes, and visualizes real-time sensor data from industrial machines and processes.
+ScadaPRO2 is a **production-ready industrial IoT monitoring dashboard** that collects, analyzes, and visualizes real-time sensor data from industrial machines and processes.
 
 ### Key Capabilities
 - ✅ Real-time sensor monitoring (5-second polling)

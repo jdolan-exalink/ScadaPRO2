@@ -1,6 +1,6 @@
-# 🚀 SCADA Pro v0.1.0 - Guía de Migración
+# 🚀 ScadaPRO2 v0.2.0 - Guía de Migración
 
-Esta guía te ayudará a migrar desde versiones de desarrollo a la versión 0.1.0 de SCADA Pro.
+Esta guía te ayudará a migrar desde versiones de desarrollo a la versión 0.2.0 de ScadaPRO2.
 
 ## 📋 Cambios Importantes en v0.1.0
 
