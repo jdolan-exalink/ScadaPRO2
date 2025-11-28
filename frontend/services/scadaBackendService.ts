@@ -31,8 +31,8 @@ const getBackendUrl = (): string => {
     return 'http://localhost:8000';
   }
   
-  // Fallback to relative API path (assumes reverse proxy or same-origin)
-  return '/api/..';
+  // Fallback to relative root path (assumes reverse proxy or same-origin with /api proxy)
+  return '';
 };
 
 class ScadaBackendService {
@@ -124,7 +124,7 @@ class ScadaBackendService {
    */
   async getVersion(): Promise<string | null> {
     try {
-      const data = await this.fetch<{ version: string }>('/version');
+      const data = await this.fetch<{ version: string }>('/api/version');
       return data.version;
     } catch (error) {
       console.error('Failed to get version:', error);
@@ -141,7 +141,7 @@ class ScadaBackendService {
    */
   async getMachines(): Promise<Machine[]> {
     try {
-      const data = await this.fetch<Machine[]>('/machines');
+      const data = await this.fetch<Machine[]>('/api/machines');
       return data;
     } catch (error) {
       console.error('Failed to fetch machines:', error);
@@ -154,7 +154,7 @@ class ScadaBackendService {
    */
   async getMachine(machineId: number): Promise<Machine | null> {
     try {
-      const data = await this.fetch<Machine>(`/machines/${machineId}`);
+      const data = await this.fetch<Machine>(`/api/machines/${machineId}`);
       return data;
     } catch (error) {
       console.error(`Failed to fetch machine ${machineId}:`, error);
@@ -171,7 +171,7 @@ class ScadaBackendService {
    */
   async getPLCs(): Promise<PLC[]> {
     try {
-      const data = await this.fetch<PLC[]>('/plcs');
+      const data = await this.fetch<PLC[]>('/api/plcs');
       return data;
     } catch (error) {
       console.error('Failed to fetch PLCs:', error);
@@ -184,7 +184,7 @@ class ScadaBackendService {
    */
   async getPLC(plcId: number): Promise<PLC | null> {
     try {
-      const data = await this.fetch<PLC>(`/plcs/${plcId}`);
+      const data = await this.fetch<PLC>(`/api/plcs/${plcId}`);
       return data;
     } catch (error) {
       console.error(`Failed to fetch PLC ${plcId}:`, error);
@@ -197,7 +197,7 @@ class ScadaBackendService {
    */
   async updatePLC(plcId: number, updates: Partial<PLC>): Promise<PLC | null> {
     try {
-      const data = await this.fetch<PLC>(`/plcs/${plcId}`, {
+      const data = await this.fetch<PLC>(`/api/plcs/${plcId}`, {
         method: 'PATCH',
         body: JSON.stringify(updates),
       });
@@ -276,7 +276,7 @@ class ScadaBackendService {
    */
   async getSensor(sensorId: number): Promise<Sensor | null> {
     try {
-      const data = await this.fetch<Sensor>(`/sensors/${sensorId}`);
+      const data = await this.fetch<Sensor>(`/api/sensors/${sensorId}`);
       return data;
     } catch (error) {
       console.error(`Failed to fetch sensor ${sensorId}:`, error);
@@ -297,7 +297,7 @@ class ScadaBackendService {
       const fromStr = from.toISOString();
       const toStr = to.toISOString();
 
-      const endpoint = `/sensors/${sensorId}/history?from=${encodeURIComponent(
+      const endpoint = `/api/sensors/${sensorId}/history?from=${encodeURIComponent(
         fromStr
       )}&to=${encodeURIComponent(toStr)}`;
 
@@ -502,7 +502,7 @@ class ScadaBackendService {
    */
   async createAlarm(alarmData: any): Promise<any | null> {
     try {
-      const data = await this.fetch<any>('/alarms', {
+      const data = await this.fetch<any>('/api/alarms', {
         method: 'POST',
         body: JSON.stringify(alarmData),
       });
@@ -558,7 +558,7 @@ class ScadaBackendService {
    */
   async exportConfiguration(): Promise<any | null> {
     try {
-      const data = await this.fetch<any>('/export/configuration');
+      const data = await this.fetch<any>('/api/export/configuration');
       return data;
     } catch (error) {
       console.error('Failed to export configuration:', error);
