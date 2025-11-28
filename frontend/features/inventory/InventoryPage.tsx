@@ -38,12 +38,10 @@ export const InventoryPage: React.FC = () => {
     const connectWs = async () => {
       setMqttStatus('connecting');
       try {
-        // Get WebSocket URL and token from config
-        const config = adminService.getCollectorConfig();
-        const host = config.collector?.host || '10.147.18.10';
-        const port = config.collector?.port || 8000;
-        const token = config.collector?.token || '';
-        const wsUrl = `ws://${host}:${port}/ws/realtime`;
+        // Use relative WebSocket URL to work through nginx proxy
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/realtime`;
+        const token = adminService.getCollectorConfig().collector?.token || '';
         
         console.log('🔌 Inventory: Connecting to WebSocket:', wsUrl);
         await mqttService.connect(wsUrl, token);
@@ -122,6 +120,25 @@ export const InventoryPage: React.FC = () => {
       ]);
       setPlcs(plcsData);
       setSensors(sensorsData);
+      
+      // Load initial sensor values
+      try {
+        const sensorValues = await scadaBackendService.getSensorValues();
+        const valueMap: Record<string, SensorValue> = {};
+        sensorValues.forEach((sv: any) => {
+          if (sv.sensor_code) {
+            valueMap[sv.sensor_code] = {
+              value: sv.value,
+              timestamp: Date.now(),
+              flash: false
+            };
+          }
+        });
+        setSensorValues(valueMap);
+        console.log('📊 Loaded initial sensor values:', Object.keys(valueMap).length);
+      } catch (e) {
+        console.warn('Could not load initial sensor values:', e);
+      }
     } catch (error) {
       console.error("Failed to load inventory", error);
     } finally {
