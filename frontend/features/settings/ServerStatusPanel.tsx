@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import { scadaBackendService } from '../../services/scadaBackendService';
+import { mqttService } from '../../services/mqttService';
 import { MQTTSystemStatus, PostgreSQLStats, CollectorStats } from '../../types';
 
 // Interface for sensor values from MQTT
@@ -66,6 +67,7 @@ interface ServerStatus {
     name: string;
     user: string;
     error?: string;
+    total_records?: number;
   };
   collector: {
     status: string;
@@ -75,6 +77,7 @@ interface ServerStatus {
     enabled: boolean;
     latency?: number;
     error?: string;
+    ip?: string;
   };
   connections: {
     websocketClients: number;
@@ -298,7 +301,14 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
   // Fetch sensors from backend API
   const fetchSensorsFromBackend = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3002/api/sensors/values');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch('/api/sensors/last-values', {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         if (data.sensors) {
@@ -388,14 +398,14 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
     );
   }
 
-  if (error && !status) {
+  if (error || !status) {
     return (
       <div className="bg-scada-800 border border-scada-700 rounded-xl p-6">
-        <div className="flex items-center gap-3 text-red-400">
+        <div className="flex items-center gap-3 text-amber-400">
           <AlertTriangle size={24} />
           <div>
-            <div className="font-semibold">Error de conexión</div>
-            <div className="text-sm text-slate-400">{error}</div>
+            <div className="font-semibold">Estado del servidor no disponible</div>
+            <div className="text-sm text-slate-400">{error || 'No se pudo conectar al backend. Verifica que esté corriendo en la configuración.'}</div>
           </div>
         </div>
         <button 
@@ -408,8 +418,6 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
       </div>
     );
   }
-
-  if (!status) return null;
 
   return (
     <div className="bg-scada-800 border border-scada-700 rounded-xl overflow-hidden">
@@ -475,7 +483,7 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Mensajes</span>
-                <span className="text-yellow-400 font-bold">{status.mqtt.totalMessages.toLocaleString()}</span>
+                <span className="text-yellow-400 font-bold">{(status.mqtt.totalMessages || 0)?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Velocidad</span>
@@ -506,6 +514,10 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
                 <span className="text-slate-400">Usuario</span>
                 <span className="text-white font-mono text-xs">{status.database.user}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Registros</span>
+                <span className="text-yellow-400 font-bold">{(status.database.total_records || 0)?.toLocaleString()}</span>
+              </div>
               {status.database.error && (
                 <div className="text-xs text-red-400 bg-red-500/10 p-2 rounded mt-2">
                   {status.database.error}
@@ -514,12 +526,12 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
             </div>
           </div>
 
-          {/* Collector API Status */}
+          {/* Colector API Status */}
           <div className="bg-scada-900 rounded-lg p-4 border border-scada-700">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Globe className={status.collector.reachable ? 'text-green-400' : 'text-red-400'} size={20} />
-                <span className="font-semibold text-white">Collector API</span>
+                <span className="font-semibold text-white">Colector API</span>
               </div>
               <StatusBadge status={status.collector.status} reachable={status.collector.reachable} />
             </div>
@@ -528,6 +540,12 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
                 <span className="text-slate-400">Host</span>
                 <span className="text-white font-mono text-xs">{status.collector.host}:{status.collector.port}</span>
               </div>
+              {status.collector.ip && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">IP LAN</span>
+                  <span className="text-cyan-400 font-mono text-xs">{status.collector.ip}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-400">Estado</span>
                 <span className={status.collector.enabled ? 'text-green-400' : 'text-slate-500'}>
@@ -561,7 +579,7 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
           <MetricCard 
             icon={<MemoryStick size={18} />}
             label="Memoria"
-            value={`${status.system.memoryUsage}%`}
+            value={`${Math.round(status.system.memoryUsage)}%`}
             subValue={`${formatBytes(status.system.usedMemory)} / ${formatBytes(status.system.totalMemory)}`}
             color={status.system.memoryUsage > 80 ? 'red' : status.system.memoryUsage > 50 ? 'yellow' : 'green'}
           />
@@ -618,20 +636,20 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
             />
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-slate-400">Heap usado: </span>
-                <span className="text-white font-mono">{formatBytes(status.process.heapUsed)}</span>
+                <span className="text-slate-400">Total: </span>
+                <span className="text-white font-mono">{formatBytes(status.system.totalMemory)}</span>
               </div>
               <div>
-                <span className="text-slate-400">Heap total: </span>
-                <span className="text-white font-mono">{formatBytes(status.process.heapTotal)}</span>
+                <span className="text-slate-400">Usado: </span>
+                <span className="text-white font-mono">{formatBytes(status.system.usedMemory)}</span>
               </div>
               <div>
-                <span className="text-slate-400">RSS: </span>
+                <span className="text-slate-400">Disponible: </span>
+                <span className="text-white font-mono">{formatBytes(status.system.freeMemory)}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Backend: </span>
                 <span className="text-white font-mono">{formatBytes(status.process.rss)}</span>
-              </div>
-              <div>
-                <span className="text-slate-400">External: </span>
-                <span className="text-white font-mono">{formatBytes(status.process.external)}</span>
               </div>
             </div>
           </div>
@@ -684,7 +702,7 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
             {postgresStats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <div className="text-center p-3 bg-scada-800 rounded">
-                  <div className="text-2xl font-bold text-green-400">{postgresStats.tables?.sensor_data?.toLocaleString() || 0}</div>
+                  <div className="text-2xl font-bold text-green-400">{(postgresStats?.tables?.sensor_data || 0)?.toLocaleString()}</div>
                   <div className="text-xs text-slate-400">Registros sensor_data</div>
                 </div>
                 <div className="text-center p-3 bg-scada-800 rounded">
@@ -692,12 +710,16 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
                   <div className="text-xs text-slate-400">Sensores en BD</div>
                 </div>
                 <div className="text-center p-3 bg-scada-800 rounded">
-                  <div className="text-2xl font-bold text-purple-400">{postgresStats.tables?.machines || 0}</div>
+                  <div className="text-2xl font-bold text-purple-400">{postgresStats?.tables?.machines || 0}</div>
                   <div className="text-xs text-slate-400">Máquinas</div>
                 </div>
                 <div className="text-center p-3 bg-scada-800 rounded">
-                  <div className="text-2xl font-bold text-yellow-400">{(postgresStats.performance?.cache_hit_ratio * 100)?.toFixed(1) || 0}%</div>
+                  <div className="text-2xl font-bold text-yellow-400">{((postgresStats?.performance?.cache_hit_ratio || 0) * 100)?.toFixed(1) || 0}%</div>
                   <div className="text-xs text-slate-400">Cache Hit Ratio</div>
+                </div>
+                <div className="text-center p-3 bg-scada-800 rounded md:col-start-1">
+                  <div className="text-2xl font-bold text-indigo-400">{(postgresStats?.total_records || 0)?.toLocaleString() || 0}</div>
+                  <div className="text-xs text-slate-400">Total Registros BD</div>
                 </div>
               </div>
             )}
@@ -724,17 +746,6 @@ export const ServerStatusPanel: React.FC<ServerStatusPanelProps> = ({ sensorValu
           </button>
         </div>
 
-        {/* Footer with last update */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-scada-700">
-          <span>
-            Servidor: {status.server.name} v{status.server.version}
-          </span>
-          {lastUpdate && (
-            <span>
-              Última actualización: {lastUpdate.toLocaleTimeString()}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Sensors Monitor Modal */}

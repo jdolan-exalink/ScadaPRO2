@@ -23,7 +23,8 @@ const DEFAULT_CONFIG: CollectorConfig = {
     user: 'backend',
     password: 'backend_pass',
     name: 'industrial',
-    driver: 'postgresql+asyncpg'
+    driver: 'postgresql+asyncpg',
+    record_save_interval: 10
   }
 };
 
@@ -636,6 +637,23 @@ export const CollectorConfigModal: React.FC<Props> = ({ onClose, onSave }) => {
                     value={formData.database.driver}
                     onChange={e => handleDatabaseChange('driver', e.target.value)}
                   />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Intervalo de Guardado de Registros (segundos)</label>
+                  <input 
+                    type="number" 
+                    required
+                    min={1}
+                    max={3600}
+                    placeholder="10"
+                    className="w-full bg-scada-900 border border-scada-700 rounded px-3 py-2 text-white focus:border-scada-500 outline-none font-mono"
+                    value={formData.database.record_save_interval || 10}
+                    onChange={e => handleDatabaseChange('record_save_interval', parseInt(e.target.value) || 10)}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Define cada cuántos segundos se guardan los registros en la BD</p>
                 </div>
               </div>
               

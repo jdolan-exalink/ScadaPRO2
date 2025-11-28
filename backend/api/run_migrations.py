@@ -16,7 +16,7 @@ from datetime import datetime
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from database import engine, AsyncSessionLocal
+from .database import engine, AsyncSessionLocal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("migrations")

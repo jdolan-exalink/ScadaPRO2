@@ -224,3 +224,23 @@ class MachineAlarmHistory(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Connected Machines for MQTT Live Data
+class ConnectedMachineSensor(BaseModel):
+    code: str
+    name: str
+    last_update: Optional[datetime] = None
+
+class ConnectedMachine(BaseModel):
+    code: str
+    name: str
+    plcCode: str
+    plcName: str
+    isActive: bool
+    lastSeen: Optional[datetime] = None
+    sensorCount: int
+    sensors: list[str] = []
+
+class ConnectedMachineResponse(BaseModel):
+    machines: list[ConnectedMachine]
+    summary: dict

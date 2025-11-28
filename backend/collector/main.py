@@ -695,6 +695,10 @@ async def get_postgresql_stats() -> dict:
             rows = result.fetchall()
             stats["tables"] = {row[0]: row[1] for row in rows}
             
+            # Calculate total records across all user tables
+            total_records = sum(row[1] for row in rows)
+            stats["total_records"] = total_records
+            
             # Get insert/update rates from pg_stat_user_tables
             result = await db.execute(text("""
                 SELECT 

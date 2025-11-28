@@ -21,8 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger("init_db")
 
 try:
-    from database import engine, Base
-    import models  # Importar modelos para registrarlos en Base
+    from .database import engine, Base
+    from . import models  # Importar modelos para registrarlos en Base
 except ImportError as e:
     logger.error(f"❌ Error importando módulos: {e}")
     logger.info("Asegúrate de ejecutar desde el directorio /api")

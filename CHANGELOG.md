@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-11-28
+
+### Added
+- ✅ **MQTT Real-time Statistics**
+  - Live tracking of connected machines (count)
+  - Live tracking of active sensors (count)
+  - Total message count from MQTT broker
+  - Messages per second calculation (60-second rolling window)
+  - Real-time updates in server status panel
+
+- ✅ **Database Record Tracking**
+  - Display total records count in PostgreSQL status
+  - Formatted with thousand separators (e.g., 28,567)
+  - Updates in real-time from collector metrics
+
+- ✅ **Enhanced Collector API Information**
+  - Renamed "Collector API" to "Colector API" (Spanish)
+  - Display LAN IP address (eth0) of collector service
+  - IP resolution from socket connection method
+  - Better visual distinction with cyan color for IP display
+
+- ✅ **Settings Page Improvements**
+  - MQTT connection state properly cleaned up when leaving Settings page
+  - Removed unnecessary "Refrescar" (Refresh) button from header
+  - Better state management for WebSocket connections
+
+- ✅ **System Uptime Fix**
+  - Fixed server uptime display (was showing timestamp instead of system uptime)
+  - Now correctly shows format like "4 days, 9:44" based on actual host boot time
+  - Proper calculation from psutil.boot_time()
+
+### Changed
+- Improved MQTT message handling to record machine/sensor/PLC information
+- Enhanced ServerStatusPanel to display configurable record save interval
+- Better error handling for undefined values in status display (null coalescing operators)
+
+### Technical Details
+- Added `MQTTStats` class to track real-time MQTT statistics
+- Added `get_collector_ip()` async function using socket connection for accurate IP detection
+- Enhanced `on_message` callback to parse and record MQTT metadata
+- Database queries now count total records from sensor_data table
+- Frontend type definitions updated for new fields (ip, total_records)
+
 ## [0.1.0] - 2025-01-27
 
 ### Added

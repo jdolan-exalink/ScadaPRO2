@@ -53,11 +53,11 @@ def check_db_connection():
     print_header("🔌 Verificando conexión a BD")
     
     try:
-        from database import get_db_url
+        from .database import get_db_url
         print(f"  DB URL: {get_db_url()}")
         
         import asyncio
-        from database import engine
+        from .database import engine
         
         async def test_connection():
             try:
@@ -84,7 +84,7 @@ def check_tables():
     
     try:
         import asyncio
-        from database import AsyncSessionLocal
+        from .database import AsyncSessionLocal
         from sqlalchemy import text
         
         async def check():
@@ -129,7 +129,7 @@ def check_migrations():
     
     try:
         import asyncio
-        from database import AsyncSessionLocal
+        from .database import AsyncSessionLocal
         from sqlalchemy import text
         
         async def check():

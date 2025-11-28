@@ -233,6 +233,7 @@ export interface PostgreSQLStats {
     total_deletes?: number;
     cache_hit_ratio: number;
   };
+  total_records?: number;
 }
 
 // ============================================

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { adminService } from '../../services/adminService';
 import { scadaBackendService } from '../../services/scadaBackendService';
+import { mqttService } from '../../services/mqttService';
 import { PostgreSQLStats } from '../../types';
-import { RefreshCw, Cpu, Zap, Wifi, Activity, Save, Check, Settings, Server, Radio, Key, Copy, Database, HardDrive, FileText } from 'lucide-react';
+import { Cpu, Zap, Wifi, Activity, Save, Check, Settings, Server, Radio, Key, Copy, Database, HardDrive, FileText } from 'lucide-react';
 import { CollectorConfigModal } from './CollectorConfigModal';
 import { BackendFormModal } from './BackendFormModal';
 import { ServerStatusPanel } from './ServerStatusPanel';
@@ -73,7 +74,6 @@ export const SettingsPage: React.FC = () => {
   const [plcs, setPlcs] = useState<any[]>([]);
   const [sensors, setSensors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   
@@ -194,7 +194,10 @@ export const SettingsPage: React.FC = () => {
     connectWs();
     
     return () => {
+      // Cleanup: desconectar MQTT y resetear estado al desmontar
       mqttService.offConnectionChange(handleConnectionChange);
+      mqttService.disconnect();
+      setMqttStatus('disconnected');
     };
   }, [handleConnectionChange]);
 
@@ -302,30 +305,6 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleRefreshPLCs = async () => {
-    setRefreshing(true);
-    try {
-      console.log("Starting sync...");
-      // Sincronizar inventario desde el collector remoto
-      const result = await adminService.syncInventory();
-      console.log("Sync result:", result);
-      if (result.success) {
-        // Recargar datos locales
-        console.log("Sync successful, reloading data...");
-        await loadData();
-        console.log("Data reloaded, PLCs:", plcs.length);
-      } else {
-        console.error("Sync error:", result.error);
-        alert(`Error al sincronizar: ${result.error}`);
-      }
-    } catch (e) {
-      console.error("Error refreshing PLCs", e);
-      alert(`Error: ${e}`);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   const handleSaveInventory = async () => {
     setSaving(true);
     setSaveSuccess(false);
@@ -380,17 +359,11 @@ export const SettingsPage: React.FC = () => {
 
       {/* Header */}
       <div className="flex justify-between items-center border-b border-scada-700 pb-4">
-        <h2 className="text-2xl font-bold text-white">Configuración del Sistema</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-white">Configuración del Sistema</h2>
+          <p className="text-sm text-slate-400 mt-1">Estado de conexión MQTT: <span className={mqttStatus === 'connected' ? 'text-green-400' : mqttStatus === 'connecting' ? 'text-yellow-400' : 'text-red-400'}>{mqttStatus}</span></p>
+        </div>
         <div className="flex items-center gap-4">
-          {/* Botón Refrescar */}
-          <button
-            onClick={handleRefreshPLCs}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 rounded bg-scada-700 hover:bg-scada-600 disabled:opacity-50 text-white transition-colors"
-          >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? 'Sincronizando...' : 'Refrescar'}
-          </button>
           {/* Botón Configuración Backend */}
           <button
             onClick={() => setShowConfigModal(true)}
@@ -403,7 +376,9 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Server Status Panel */}
-      <ServerStatusPanel sensorValues={sensorValues} />
+      <div className="mt-6">
+        <ServerStatusPanel sensorValues={sensorValues} />
+      </div>
     </div>
   );
 };

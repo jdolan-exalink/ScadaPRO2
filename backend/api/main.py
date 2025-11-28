@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import desc
-from database import engine, Base, get_db, AsyncSessionLocal
-import models, schemas
+from .database import engine, Base, get_db, AsyncSessionLocal
+from . import models, schemas
 import json
 import asyncio
 import logging
@@ -14,10 +14,10 @@ import secrets
 import traceback
 from typing import List, Dict, Set, Optional
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import re
-from config_manager import (
+from .config_manager import (
     get_all_machines,
     read_machine,
     create_machine,
@@ -36,13 +36,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("api")
 
 # Version
-VERSION = "0.9"
+VERSION = "0.2"
 
 # WebSocket Manager
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-        self.subscriptions: Dict[WebSocket, Set[str]] = {}
+        self.subscriptions: Dict[WebSocket, Set[str]] = {}  # topic patterns per connection
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -55,32 +55,152 @@ class ConnectionManager:
         if websocket in self.subscriptions:
             del self.subscriptions[websocket]
 
-    async def subscribe(self, websocket: WebSocket, sensor_codes: List[str]):
+    async def subscribe(self, websocket: WebSocket, topics: List[str]):
+        """Subscribe to MQTT topic patterns"""
         if websocket in self.subscriptions:
-            self.subscriptions[websocket].update(sensor_codes)
+            self.subscriptions[websocket].update(topics)
+            print(f"Subscribed to topics: {topics}")
 
-    async def broadcast_sensor_data(self, data: dict):
-        sensor_code = data.get("sensor_code")
-        # Format for frontend
+    def topic_matches(self, topic: str, pattern: str) -> bool:
+        """Check if topic matches pattern (supports MQTT wildcards)"""
+        if pattern == '*' or pattern == '#':
+            return True
+        
+        topic_parts = topic.split('/')
+        pattern_parts = pattern.split('/')
+        
+        for i, part in enumerate(pattern_parts):
+            if part == '#':
+                # # matches all remaining levels
+                return True
+            if part == '*':
+                # * matches exactly one level
+                if i >= len(topic_parts):
+                    return False
+                continue
+            if i >= len(topic_parts) or part != topic_parts[i]:
+                return False
+        
+        return len(topic_parts) == len(pattern_parts)
+
+    async def broadcast_message(self, topic: str, data: dict):
+        """Broadcast message to subscribed clients"""
         message = {
-            "type": "measurement",
-            "sensor_code": sensor_code,
-            "timestamp": data.get("timestamp"),
-            "value": data.get("value"),
-            "unit": data.get("unit")
+            "topic": topic,
+            "payload": data
         }
         
         to_remove = []
         for connection in self.active_connections:
             try:
-                if sensor_code in self.subscriptions.get(connection, set()):
+                # Check if client is subscribed to this topic
+                subscriptions = self.subscriptions.get(connection, set())
+                
+                # Always send if no subscriptions (default behavior)
+                should_send = len(subscriptions) == 0
+                
+                # Or send if any pattern matches
+                if not should_send:
+                    for pattern in subscriptions:
+                        if self.topic_matches(topic, pattern):
+                            should_send = True
+                            break
+                
+                if should_send:
                     await connection.send_json(message)
-            except Exception:
+            except Exception as e:
+                print(f"Error sending message: {e}")
                 to_remove.append(connection)
         
         for connection in to_remove:
             self.disconnect(connection)
 
+    async def broadcast_sensor_data(self, data: dict):
+        """Legacy method - broadcasts sensor data from MQTT"""
+        sensor_code = data.get("sensor_code")
+        machine_code = data.get("machine_code", "unknown")
+        plc_code = data.get("plc_code", "unknown")
+        
+        # Build MQTT-style topic
+        topic = f"machines/{machine_code}/{plc_code}/{sensor_code}"
+        
+        # Format for frontend
+        message = {
+            "type": "measurement",
+            "topic": topic,
+            "payload": {
+                "sensor_code": sensor_code,
+                "timestamp": data.get("timestamp"),
+                "value": data.get("value"),
+                "unit": data.get("unit")
+            }
+        }
+        
+        # Broadcast to all connected clients
+        await self.broadcast_message(topic, {
+            "sensor_code": sensor_code,
+            "timestamp": data.get("timestamp"),
+            "value": data.get("value"),
+            "unit": data.get("unit")
+        })
+
+# MQTT Statistics Tracker
+class MQTTStats:
+    def __init__(self):
+        self.machines: Set[str] = set()
+        self.sensors: Set[str] = set()
+        self.total_messages: int = 0
+        self.message_timestamps: List[float] = []
+        self.last_clear_time: float = 0
+    
+    def record_message(self, machine_code: str, plc_code: str, sensor_code: str):
+        """Record incoming MQTT message"""
+        import time
+        current_time = time.time()
+        
+        # Add machine and sensor
+        if machine_code:
+            self.machines.add(machine_code)
+        if sensor_code:
+            self.sensors.add(sensor_code)
+        
+        # Record message timestamp
+        self.total_messages += 1
+        self.message_timestamps.append(current_time)
+        
+        # Keep only last 60 seconds of timestamps for msg/s calculation
+        cutoff_time = current_time - 60
+        self.message_timestamps = [ts for ts in self.message_timestamps if ts > cutoff_time]
+    
+    def get_messages_per_second(self) -> float:
+        """Calculate messages per second in the last 60 seconds"""
+        import time
+        if not self.message_timestamps:
+            return 0.0
+        
+        current_time = time.time()
+        cutoff_time = current_time - 60
+        recent_messages = [ts for ts in self.message_timestamps if ts > cutoff_time]
+        
+        if len(recent_messages) < 2:
+            return 0.0
+        
+        time_span = recent_messages[-1] - recent_messages[0]
+        if time_span < 1:
+            return float(len(recent_messages))
+        
+        return len(recent_messages) / time_span
+    
+    def get_stats(self) -> dict:
+        """Get current statistics"""
+        return {
+            "machines": len(self.machines),
+            "sensors": len(self.sensors),
+            "total_messages": self.total_messages,
+            "messages_per_second": round(self.get_messages_per_second(), 2)
+        }
+
+mqtt_message_stats = MQTTStats()
 manager = ConnectionManager()
 
 import yaml
@@ -143,6 +263,14 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode())
+        
+        # Record MQTT statistics
+        # Support both "machine_code" and "machine" field names
+        machine_code = payload.get("machine_code", payload.get("machine", ""))
+        plc_code = payload.get("plc_code", payload.get("plc", ""))
+        sensor_code = payload.get("sensor_code", payload.get("sensor", ""))
+        mqtt_message_stats.record_message(machine_code, plc_code, sensor_code)
+        
         # Log for debugging (optional, can be noisy)
         # print(f"MQTT Message received: {payload}")
         if app_loop and app_loop.is_running():
@@ -242,9 +370,335 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 async def health_check():
     return {"status": "ok"}
 
+@app.get("/api/mqtt/stats")
+async def mqtt_stats(db: AsyncSession = Depends(get_db)):
+    """
+    Get MQTT connection statistics.
+    Returns information about MQTT connectivity and data flow.
+    """
+    try:
+        # Check if we have recent data
+        result = await db.execute(
+            select(models.SensorLastValue)
+            .order_by(models.SensorLastValue.timestamp.desc())
+            .limit(1)
+        )
+        latest_data = result.scalar_one_or_none()
+        
+        connected = latest_data is not None
+        
+        return {
+            "connected": connected,
+            "broker": "mqtt" ,
+            "port": 1883,
+            "hasRecentData": connected,
+            "timestamp": datetime.now(timezone.utc).isoformat() if latest_data else None
+        }
+    except Exception as e:
+        logger.error(f"Error getting MQTT stats: {e}")
+        return {
+            "connected": False,
+            "broker": "mqtt",
+            "port": 1883,
+            "hasRecentData": False,
+            "timestamp": None
+        }
+
 @app.get("/api/version")
 async def version():
     return {"version": VERSION}
+
+
+# ============================================
+# Data Configuration Endpoints (Collector, MQTT, Database)
+# ============================================
+
+@app.get("/api/data-config")
+async def get_data_config():
+    """Load collector, MQTT and database configuration"""
+    try:
+        import yaml
+        config_path = os.getenv("CONFIG_PATH", "/app/config")
+        settings_file = os.path.join(config_path, "settings.yml")
+        
+        if not os.path.exists(settings_file):
+            # Return default config if settings.yml doesn't exist yet
+            return {
+                "collector": {
+                    "host": "localhost",
+                    "port": 8000,
+                    "token": "",
+                    "enabled": True
+                },
+                "mqtt": {
+                    "broker_url": "mqtt://localhost:1883",
+                    "mqtt_host": "localhost",
+                    "mqtt_port": 1883,
+                    "topic": "machines/#",
+                    "enabled": True
+                },
+                "database": {
+                    "host": "db",
+                    "port": 5432,
+                    "user": "backend",
+                    "password": "backend_pass",
+                    "name": "industrial",
+                    "driver": "postgresql+asyncpg",
+                    "record_save_interval": 10
+                }
+            }
+        
+        with open(settings_file, 'r') as f:
+            config = yaml.safe_load(f) or {}
+        
+        # Extract collector, mqtt, and database configs
+        return {
+            "collector": config.get("collector", {
+                "host": "localhost",
+                "port": 8000,
+                "token": "",
+                "enabled": True
+            }),
+            "mqtt": config.get("mqtt", {
+                "broker_url": "mqtt://localhost:1883",
+                "mqtt_host": "localhost",
+                "mqtt_port": 1883,
+                "topic": "machines/#",
+                "enabled": True
+            }),
+            "database": config.get("database", {
+                "host": "db",
+                "port": 5432,
+                "user": "backend",
+                "password": "backend_pass",
+                "name": "industrial",
+                "driver": "postgresql+asyncpg",
+                "record_save_interval": 10
+            })
+        }
+    except Exception as e:
+        logger.error(f"Error loading data config: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/data-config")
+async def save_data_config(body: dict):
+    """Save collector, MQTT and database configuration"""
+    try:
+        import yaml
+        config_path = os.getenv("CONFIG_PATH", "/app/config")
+        settings_file = os.path.join(config_path, "settings.yml")
+        
+        # Create config directory if it doesn't exist
+        os.makedirs(config_path, exist_ok=True)
+        
+        # Load existing config or create new one
+        if os.path.exists(settings_file):
+            with open(settings_file, 'r') as f:
+                config = yaml.safe_load(f) or {}
+        else:
+            config = {}
+        
+        # Update with new values
+        config['collector'] = body.get('collector', config.get('collector', {}))
+        config['mqtt'] = body.get('mqtt', config.get('mqtt', {}))
+        config['database'] = body.get('database', config.get('database', {}))
+        
+        # Write back to file
+        with open(settings_file, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
+        
+        logger.info(f"Data config saved to {settings_file}")
+        
+        return {
+            "success": True,
+            "message": "Configuration saved successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error saving data config: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def get_collector_ip() -> str:
+    """Get the IP address from eth0 interface"""
+    import socket
+    try:
+        # Get the IP address from eth0 interface
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Connect to a remote server (doesn't actually send data)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception as e:
+        print(f"Error getting eth0 IP: {e}")
+        return "unknown"
+
+
+@app.get("/api/server/status")
+async def get_server_status(db: AsyncSession = Depends(get_db)):
+    import platform
+    import time
+    import os as os_module
+    import psutil
+    from sqlalchemy import func
+    
+    # Get system info with psutil
+    try:
+        if hasattr(os_module, 'getloadavg'):
+            load_avg = os_module.getloadavg()
+        else:
+            load_avg = [0, 0, 0]
+    except:
+        load_avg = [0, 0, 0]
+    
+    # Get CPU model from /proc/cpuinfo (from host)
+    cpu_model = "Unknown"
+    try:
+        proc_path = '/host/proc/cpuinfo' if os.path.exists('/host/proc/cpuinfo') else '/proc/cpuinfo'
+        with open(proc_path, 'r') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    cpu_model = line.split(':', 1)[1].strip()
+                    break
+    except:
+        cpu_model = platform.processor() or "Unknown"
+    
+    # Get total system memory from /proc/meminfo (from host)
+    total_memory_host = 0
+    free_memory_host = 0
+    try:
+        proc_path = '/host/proc/meminfo' if os.path.exists('/host/proc/meminfo') else '/proc/meminfo'
+        with open(proc_path, 'r') as f:
+            meminfo = {}
+            for line in f:
+                parts = line.split(':', 1)
+                if len(parts) == 2:
+                    key, value = parts
+                    meminfo[key.strip()] = int(value.split()[0]) * 1024  # Convert KB to Bytes
+            
+            total_memory_host = meminfo.get('MemTotal', 0)
+            free_memory_host = meminfo.get('MemAvailable', meminfo.get('MemFree', 0))
+    except:
+        total_memory_host = 0
+        free_memory_host = 0
+    
+    # Get CPU and memory info from psutil (container view, for fallback)
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        virtual_memory = psutil.virtual_memory()
+        
+        # Use host memory if available, otherwise use container memory
+        if total_memory_host > 0:
+            total_memory = total_memory_host
+            free_memory = free_memory_host
+            used_memory = total_memory - free_memory
+            memory_percent = (used_memory / total_memory * 100) if total_memory > 0 else 0
+        else:
+            total_memory = virtual_memory.total
+            free_memory = virtual_memory.available
+            used_memory = virtual_memory.used
+            memory_percent = virtual_memory.percent
+    except:
+        cpu_percent = 0
+        total_memory = total_memory_host if total_memory_host > 0 else 0
+        free_memory = free_memory_host if free_memory_host > 0 else 0
+        used_memory = total_memory - free_memory if total_memory > 0 else 0
+        memory_percent = 0
+    
+    # Get process info
+    try:
+        process = psutil.Process()
+        process_memory = process.memory_info()
+        heap_used = process_memory.rss
+        heap_total = total_memory
+        external = 0
+        rss = process_memory.rss
+    except:
+        heap_used = 0
+        heap_total = 0
+        external = 0
+        rss = 0
+    
+    # Get system uptime
+    try:
+        boot_time = psutil.boot_time()
+        system_uptime = int(time.time() - boot_time)
+    except:
+        system_uptime = int(time.time())
+    
+    # Check MQTT connection
+    mqtt_connected = mqtt_client.is_connected() if hasattr(mqtt_client, 'is_connected') else False
+    
+    # Count total records in sensor_data table
+    total_records = 0
+    try:
+        result = await db.execute(select(func.count(models.SensorData.id)))
+        total_records = result.scalar() or 0
+    except Exception as e:
+        print(f"Error counting records: {e}")
+        total_records = 0
+    
+    return {
+        "server": {
+            "name": "Industrial IoT Backend",
+            "version": VERSION,
+            "nodeVersion": platform.python_version(),
+            "platform": platform.system(),
+            "arch": platform.machine(),
+            "hostname": platform.node(),
+            "uptime": system_uptime,
+            "startTime": __import__('datetime').datetime.now().isoformat()
+        },
+        "system": {
+            "cpuCount": os_module.cpu_count() if hasattr(os_module, 'cpu_count') else 1,
+            "cpuUsage": cpu_percent,
+            "cpuModel": cpu_model,
+            "totalMemory": total_memory,
+            "freeMemory": free_memory,
+            "usedMemory": used_memory,
+            "memoryUsage": memory_percent,
+            "systemUptime": system_uptime,
+            "loadAverage": list(load_avg)
+        },
+        "process": {
+            "pid": os_module.getpid(),
+            "heapUsed": heap_used,
+            "heapTotal": heap_total,
+            "external": external,
+            "rss": rss
+        },
+        "mqtt": {
+            "status": "online" if mqtt_connected else "offline",
+            "connected": mqtt_connected,
+            "broker": f"{MQTT_HOST}:{MQTT_PORT}",
+            "topic": "machines/#",
+            "machines": mqtt_message_stats.get_stats()["machines"],
+            "sensors": mqtt_message_stats.get_stats()["sensors"],
+            "totalMessages": mqtt_message_stats.get_stats()["total_messages"],
+            "messagesPerSecond": mqtt_message_stats.get_stats()["messages_per_second"]
+        },
+        "database": {
+            "status": "online",
+            "reachable": True,
+            "host": os_module.getenv("DATABASE_HOST", "db"),
+            "port": int(os_module.getenv("DATABASE_PORT", 5432)),
+            "name": os_module.getenv("DATABASE_NAME", "industrial"),
+            "user": os_module.getenv("DATABASE_USER", "backend"),
+            "total_records": total_records
+        },
+        "collector": {
+            "status": "online",
+            "reachable": True,
+            "host": os_module.getenv("COLLECTOR_HOST", "collector"),
+            "port": int(os_module.getenv("COLLECTOR_PORT", 8001)),
+            "enabled": True,
+            "ip": await get_collector_ip()
+        },
+        "connections": {
+            "websocketClients": len(manager.active_connections) if manager else 0
+        }
+    }
 
 @app.get("/api/logs", response_model=List[schemas.SystemLog], dependencies=[Depends(get_current_user)])
 async def get_logs(
@@ -284,6 +738,92 @@ async def export_configuration(db: AsyncSession = Depends(get_db)):
 async def get_machines(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Machine))
     return result.scalars().all()
+
+@app.get("/api/machines/connected", response_model=schemas.ConnectedMachineResponse)
+async def get_connected_machines(db: AsyncSession = Depends(get_db)):
+    """
+    Get machines with active MQTT data.
+    Returns machines that have received sensor data in the last 5 minutes.
+    """
+    from datetime import timedelta, datetime, timezone
+    
+    try:
+        five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
+        
+        # Get all machines with their PLCs and sensors
+        result = await db.execute(
+            select(models.Machine, models.PLC, models.Sensor, models.SensorLastValue)
+            .join(models.PLC, models.Machine.id == models.PLC.machine_id)
+            .outerjoin(models.Sensor, models.PLC.id == models.Sensor.plc_id)
+            .outerjoin(models.SensorLastValue, models.Sensor.id == models.SensorLastValue.sensor_id)
+        )
+        
+        # Organize data by machine
+        machines_dict = {}
+        for row in result:
+            machine, plc, sensor, last_value = row
+            
+            if machine.code not in machines_dict:
+                machines_dict[machine.code] = {
+                    'machine': machine,
+                    'plcs': {},
+                    'sensors': [],
+                    'last_seen': None
+                }
+            
+            if plc and plc.code not in machines_dict[machine.code]['plcs']:
+                machines_dict[machine.code]['plcs'][plc.code] = plc
+            
+            if sensor and last_value:
+                machines_dict[machine.code]['sensors'].append({
+                    'code': sensor.code,
+                    'name': sensor.name
+                })
+                if machines_dict[machine.code]['last_seen'] is None or last_value.timestamp > machines_dict[machine.code]['last_seen']:
+                    machines_dict[machine.code]['last_seen'] = last_value.timestamp
+        
+        # Build response
+        connected_machines = []
+        for machine_code, machine_data in machines_dict.items():
+            machine = machine_data['machine']
+            plcs = list(machine_data['plcs'].values())
+            last_seen = machine_data['last_seen']
+            sensors = machine_data['sensors']
+            
+            # Consider machine as connected if it has data from the last 5 minutes
+            is_active = last_seen is not None and last_seen > five_minutes_ago
+            
+            if plcs:
+                plc = plcs[0]  # Use first PLC
+                connected_machines.append(schemas.ConnectedMachine(
+                    code=machine.code,
+                    name=machine.name,
+                    plcCode=plc.code,
+                    plcName=plc.name,
+                    isActive=is_active,
+                    lastSeen=last_seen,
+                    sensorCount=len(sensors),
+                    sensors=[s['code'] for s in sensors]
+                ))
+        
+        # Calculate summary
+        summary = {
+            'totalMachines': len(connected_machines),
+            'activeMachines': sum(1 for m in connected_machines if m.isActive),
+            'totalSensors': sum(m.sensorCount for m in connected_machines),
+            'totalMessages': sum(m.sensorCount for m in connected_machines)  # Approximate
+        }
+        
+        return schemas.ConnectedMachineResponse(
+            machines=connected_machines,
+            summary=summary
+        )
+    except Exception as e:
+        logger.error(f"Error fetching connected machines: {e}")
+        return schemas.ConnectedMachineResponse(
+            machines=[],
+            summary={'totalMachines': 0, 'activeMachines': 0, 'totalSensors': 0, 'totalMessages': 0}
+        )
 
 @app.get("/api/machines/{machine_id}", response_model=schemas.Machine, dependencies=[Depends(get_current_user)])
 async def get_machine(machine_id: int, db: AsyncSession = Depends(get_db)):
@@ -342,6 +882,86 @@ async def get_sensors(
         
     result = await db.execute(query)
     return result.scalars().all()
+
+@app.get("/api/sensors/last-values")
+async def get_sensors_last_values(db: AsyncSession = Depends(get_db)):
+    """
+    Get the last values for all sensors.
+    No authentication required for this endpoint (used by dashboard).
+    """
+    try:
+        result = await db.execute(
+            select(
+                models.Sensor.code,
+                models.Sensor.name,
+                models.SensorLastValue.value,
+                models.SensorLastValue.timestamp,
+                models.Sensor.unit,
+                models.PLC.code.label('plc_code'),
+                models.Machine.code.label('machine_code')
+            )
+            .outerjoin(models.SensorLastValue, models.Sensor.id == models.SensorLastValue.sensor_id)
+            .join(models.PLC, models.Sensor.plc_id == models.PLC.id)
+            .join(models.Machine, models.PLC.machine_id == models.Machine.id)
+        )
+        
+        sensors = {}
+        for row in result:
+            sensor_code, name, value, timestamp, unit, plc_code, machine_code = row
+            sensors[sensor_code] = {
+                'value': float(value) if value is not None else None,
+                'timestamp': int(timestamp.timestamp() * 1000) if timestamp else None,
+                'unit': unit,
+                'machineCode': machine_code,
+                'plcCode': plc_code,
+                'name': name
+            }
+        
+        return {'sensors': sensors}
+    except Exception as e:
+        logger.error(f"Error getting sensor last values: {e}")
+        return {'sensors': {}}
+
+# Alias for backward compatibility - same as last-values but without authentication requirement
+@app.get("/api/sensors/values")
+async def get_sensors_values(db: AsyncSession = Depends(get_db)):
+    """
+    Alias for /api/sensors/last-values for backward compatibility.
+    Get the last values for all sensors.
+    No authentication required for this endpoint (used by dashboard).
+    """
+    try:
+        result = await db.execute(
+            select(
+                models.Sensor.code,
+                models.Sensor.name,
+                models.SensorLastValue.value,
+                models.SensorLastValue.timestamp,
+                models.Sensor.unit,
+                models.PLC.code.label('plc_code'),
+                models.Machine.code.label('machine_code')
+            )
+            .outerjoin(models.SensorLastValue, models.Sensor.id == models.SensorLastValue.sensor_id)
+            .join(models.PLC, models.Sensor.plc_id == models.PLC.id)
+            .join(models.Machine, models.PLC.machine_id == models.Machine.id)
+        )
+        
+        sensors = {}
+        for row in result:
+            sensor_code, name, value, timestamp, unit, plc_code, machine_code = row
+            sensors[sensor_code] = {
+                'value': float(value) if value is not None else None,
+                'timestamp': int(timestamp.timestamp() * 1000) if timestamp else None,
+                'unit': unit,
+                'machineCode': machine_code,
+                'plcCode': plc_code,
+                'name': name
+            }
+        
+        return {'sensors': sensors}
+    except Exception as e:
+        logger.error(f"Error getting sensor values: {e}")
+        return {'sensors': {}}
 
 @app.get("/api/sensors/mqtt-topics", response_model=List[schemas.SensorWithMQTT], dependencies=[Depends(get_current_user)])
 async def get_sensors_with_mqtt_topics(
@@ -526,9 +1146,21 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
+            
+            # Handle subscription messages
             if data.get("action") == "subscribe":
-                sensors = data.get("sensors", [])
-                await manager.subscribe(websocket, sensors)
+                topics = data.get("topic") or data.get("sensors") or data.get("topics", [])
+                if isinstance(topics, str):
+                    topics = [topics]
+                await manager.subscribe(websocket, topics)
+            
+            # Handle unsubscription messages
+            elif data.get("action") == "unsubscribe":
+                topics = data.get("topic") or data.get("sensors") or data.get("topics", [])
+                if isinstance(topics, str):
+                    topics = [topics]
+                # TODO: implement unsubscribe if needed
+                
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
@@ -937,6 +1569,146 @@ async def toggle_machine_settings(machine_path_encoded: str):
             }
     
     raise HTTPException(status_code=500, detail="Could not determine toggled state")
+
+
+# ============================================
+# Test Endpoints for Connection Testing
+# ============================================
+
+@app.post("/api/test/collector")
+async def test_collector_connection(body: dict):
+    """Test connection to Collector API"""
+    try:
+        import requests
+        import time
+        
+        host = body.get('host', '10.147.18.10')
+        port = body.get('port', 8000)
+        token = body.get('token', '')
+        
+        url = f"http://{host}:{port}/health"
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        
+        start_time = time.time()
+        response = requests.get(url, headers=headers, timeout=5)
+        latency = int((time.time() - start_time) * 1000)
+        
+        if response.status_code == 200:
+            return {
+                "success": True,
+                "status": "online",
+                "latency": latency
+            }
+        else:
+            return {
+                "success": False,
+                "status": "offline",
+                "error": f"HTTP {response.status_code}"
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "status": "error",
+            "error": str(e)
+        }
+
+
+@app.post("/api/test/mqtt")
+async def test_mqtt_connection(body: dict):
+    """Test connection to MQTT Broker"""
+    try:
+        import paho.mqtt.client as mqtt
+        import time
+        
+        mqtt_host = body.get('mqtt_host', '10.147.18.10')
+        mqtt_port = body.get('mqtt_port', 1883)
+        
+        # Create MQTT client
+        client = mqtt.Client()
+        client.connect_flag = False
+        
+        def on_connect(client, userdata, flags, rc):
+            client.connect_flag = True
+        
+        client.on_connect = on_connect
+        
+        try:
+            client.connect(mqtt_host, mqtt_port, keepalive=5)
+            client.loop_start()
+            
+            # Wait for connection
+            timeout = 5
+            start = time.time()
+            while not client.connect_flag and time.time() - start < timeout:
+                time.sleep(0.1)
+            
+            client.loop_stop()
+            client.disconnect()
+            
+            if client.connect_flag:
+                return {
+                    "success": True,
+                    "status": "online",
+                    "machines": 0,
+                    "sensors": 0,
+                    "totalMessages": 0
+                }
+            else:
+                return {
+                    "success": False,
+                    "status": "timeout",
+                    "error": "Connection timeout"
+                }
+        except Exception as e:
+            return {
+                "success": False,
+                "status": "error",
+                "error": str(e)
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "status": "error",
+            "error": str(e)
+        }
+
+
+@app.post("/api/test/database")
+async def test_database_connection(body: dict, db: AsyncSession = Depends(get_db)):
+    """Test connection to PostgreSQL Database"""
+    try:
+        import asyncpg
+        
+        host = body.get('host', '10.147.18.10')
+        port = body.get('port', 5432)
+        user = body.get('user', 'backend')
+        password = body.get('password', 'backend_pass')
+        name = body.get('name', 'industrial')
+        
+        # Try to connect using the existing connection pool
+        try:
+            # If we got here without error, the default DB connection works
+            result = await db.execute(select(1))
+            result.fetchone()
+            
+            return {
+                "success": True,
+                "status": "online",
+                "message": f"Connected to {name}@{host}:{port}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "status": "offline",
+                "error": str(e),
+                "message": f"Failed to connect to {name}@{host}:{port}"
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "status": "error",
+            "error": str(e)
+        }
 
 
 @app.delete("/api/machines-settings/{machine_path_encoded}", dependencies=[Depends(get_current_user)])

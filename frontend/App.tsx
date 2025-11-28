@@ -73,6 +73,8 @@ const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
+
+const App: React.FC = () => {
   const [backends, setBackends] = useState<BackendConnection[]>([]);
   const [currentBackend, setCurrentBackend] = useState<BackendConnection | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,9 +120,7 @@ const AppRoutes: React.FC = () => {
   }
 
   return (
-    <AppWrapper>
-      <AppRoutes />
-    </AppWrapper>
+    <AppRoutes />
   );
 };
 

@@ -42,12 +42,11 @@ const STORAGE_KEYS = {
 // In development, use localhost:3002 for the local Node.js server
 // ============================================
 const getLocalBackendUrl = (): string => {
-  // Check if we're in production (served on port 80/443 or not on dev port)
+  // Check if we're in production (served on port 80/443)
   const isDefaultPort = window.location.port === '' || window.location.port === '80' || window.location.port === '443';
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
-  // If on default port (80/443) and localhost, we're in Docker - use relative URLs
-  if (isDefaultPort && isLocalhost) {
+  // If on default port, we're in production with nginx proxy - use relative URLs
+  if (isDefaultPort) {
     return ''; // Use relative URLs for nginx proxy
   }
   
@@ -86,7 +85,9 @@ export interface CollectorConfig {
     topic: string;
     enabled: boolean;
   };
-  database: DatabaseConfig;
+  database: DatabaseConfig & {
+    record_save_interval?: number;
+  };
 }
 
 const DEFAULT_DATABASE_CONFIG: DatabaseConfig = {
@@ -112,7 +113,10 @@ const DEFAULT_COLLECTOR_CONFIG: CollectorConfig = {
     topic: 'machines/#',
     enabled: true
   },
-  database: DEFAULT_DATABASE_CONFIG
+  database: {
+    ...DEFAULT_DATABASE_CONFIG,
+    record_save_interval: 10
+  }
 };
 
 class AdminService {
@@ -846,7 +850,14 @@ class AdminService {
     };
   } | null> {
     try {
-      const response = await fetch(`${getLocalBackendUrl()}/api/server/status`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`${getLocalBackendUrl()}/api/server/status`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         return await response.json();
       }

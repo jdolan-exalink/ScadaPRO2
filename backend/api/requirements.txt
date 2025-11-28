@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 asyncpg
 paho-mqtt
@@ -8,3 +8,5 @@ passlib[bcrypt]
 python-multipart
 alembic
 pyyaml
+websockets
+psutil

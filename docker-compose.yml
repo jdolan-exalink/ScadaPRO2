@@ -55,7 +55,7 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./backend/mosquitto/config:/mosquitto/config:ro
+      - ./backend/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - mqtt_data:/mosquitto/data
       - mqtt_logs:/mosquitto/log
     networks:
@@ -66,8 +66,10 @@ services:
         - mosquitto_sub
         - -h
         - localhost
-        - -t
+        - '-t'
         - '$SYS/broker/clients/connected'
+        - -C
+        - "1"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -86,8 +88,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      mqtt:
-        condition: service_healthy
     environment:
       # Database Configuration
       DB_HOST: db
@@ -103,8 +103,8 @@ services:
       # Python Environment
       PYTHONUNBUFFERED: "1"
     volumes:
-      - ./backend/config:/app/config:ro
-      - ./backend/api/migrations:/app/migrations
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
     ports:
       - "8000:8000"
     networks:
@@ -119,6 +119,40 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # ===========================================
+  # Collector - MQTT Data Collector Service
+  # ===========================================
+  collector:
+    build:
+      context: ./backend
+      dockerfile: collector/Dockerfile
+    image: ${COLLECTOR_IMAGE:-scada-collector:latest}
+    container_name: scada-collector
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_started
+      mqtt:
+        condition: service_started
+    environment:
+      # Database Configuration
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-backend}
+      DB_PASSWORD: ${DB_PASSWORD:-backend_password}
+      DB_NAME: ${DB_NAME:-industrial}
+      # MQTT Configuration
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+      # Python Environment
+      PYTHONUNBUFFERED: "1"
+      # Config Path
+      CONFIG_PATH: /app/config
+    volumes:
+      - ./backend/config:/app/config:ro
+    networks:
+      - scada-network
 
   # ===========================================
   # Frontend - React SCADA Dashboard
@@ -142,23 +176,19 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      # Optional: Override nginx config if needed
-      # - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    volumes: []
     networks:
       - scada-network
     healthcheck:
       test:
         - CMD
-        - wget
-        - --no-verbose
-        - --tries=1
-        - --spider
-        - http://localhost:80/health
+        - curl
+        - -f
+        - http://localhost/
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
 networks:
   scada-network:
