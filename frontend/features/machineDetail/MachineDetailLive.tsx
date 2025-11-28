@@ -155,8 +155,8 @@ export const MachineDetailLive: React.FC = () => {
     setHistoryModal(prev => ({ ...prev, open: true, sensorCode, loading: true, data: [], hours }));
     
     try {
-      // First get sensor ID from code
-      const response = await fetch(`${API_BASE}/api/sensors/history/${sensorCode}?hours=${hours}`);
+      // Fetch sensor history using correct endpoint format
+      const response = await fetch(`${API_BASE}/api/sensors/${sensorCode}/history?hours=${hours}`);
       if (!response.ok) throw new Error('Failed to fetch history');
       const data = await response.json();
       setHistoryModal(prev => ({ ...prev, data: data.history || [], loading: false }));
