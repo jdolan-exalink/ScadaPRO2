@@ -520,18 +520,51 @@ async def save_data_config(body: dict):
 
 
 async def get_collector_ip() -> str:
-    """Get the IP address from eth0 interface"""
+    """Get the IP address of the host machine"""
     import socket
+    import os as os_module
     try:
-        # Get the IP address from eth0 interface
+        # First, try to get from environment variable
+        env_ip = os_module.getenv("HOST_IP")
+        if env_ip and env_ip != "localhost" and env_ip != "127.0.0.1":
+            return env_ip
+        
+        # If not in env, try to get from request headers or docker host
+        # Get hostname and resolve it
+        hostname = socket.gethostname()
+        
+        # Try to get all IP addresses for this hostname
+        try:
+            all_ips = socket.gethostbyname_ex(hostname)[2]
+            # Filter out localhost and docker internal IPs
+            for ip in all_ips:
+                if ip != "127.0.0.1" and not ip.startswith("172."):
+                    return ip
+        except:
+            pass
+        
+        # Fallback: use the socket connection method but be aware it might be container IP
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # Connect to a remote server (doesn't actually send data)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
+        
+        # If we got a 172.x.x.x (docker bridge), try to get host IP from gateway
+        if ip.startswith("172."):
+            try:
+                import subprocess
+                result = subprocess.run(["ip", "route"], capture_output=True, text=True)
+                for line in result.stdout.split('\n'):
+                    if 'default via' in line:
+                        parts = line.split()
+                        if len(parts) >= 3:
+                            return parts[2]  # Return gateway IP (host IP)
+            except:
+                pass
+        
         return ip
     except Exception as e:
-        print(f"Error getting eth0 IP: {e}")
+        print(f"Error getting IP: {e}")
         return "unknown"
 
 

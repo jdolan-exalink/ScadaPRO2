@@ -157,11 +157,22 @@ export const MachineDetailLive: React.FC = () => {
     try {
       // Fetch sensor history using correct endpoint format
       const response = await fetch(`${API_BASE}/api/sensors/${sensorCode}/history?hours=${hours}`);
-      if (!response.ok) throw new Error('Failed to fetch history');
+      if (!response.ok) throw new Error(`Failed to fetch history: ${response.status} ${response.statusText}`);
       const data = await response.json();
+      
       // Backend returns array directly, not wrapped in .history property
       const historyData = Array.isArray(data) ? data : (data.history || []);
-      setHistoryModal(prev => ({ ...prev, data: historyData, loading: false }));
+      
+      console.log(`[History] Sensor: ${sensorCode}, Hours: ${hours}, Records: ${historyData.length}`);
+      console.log(`[History] Sample data:`, historyData.slice(0, 2));
+      
+      // Map to ensure we only use timestamp and value
+      const mappedData = historyData.map(item => ({
+        timestamp: item.timestamp,
+        value: item.value
+      }));
+      
+      setHistoryModal(prev => ({ ...prev, data: mappedData, loading: false }));
     } catch (error) {
       console.error('Error fetching sensor history:', error);
       setHistoryModal(prev => ({ ...prev, loading: false }));
