@@ -159,7 +159,9 @@ export const MachineDetailLive: React.FC = () => {
       const response = await fetch(`${API_BASE}/api/sensors/${sensorCode}/history?hours=${hours}`);
       if (!response.ok) throw new Error('Failed to fetch history');
       const data = await response.json();
-      setHistoryModal(prev => ({ ...prev, data: data.history || [], loading: false }));
+      // Backend returns array directly, not wrapped in .history property
+      const historyData = Array.isArray(data) ? data : (data.history || []);
+      setHistoryModal(prev => ({ ...prev, data: historyData, loading: false }));
     } catch (error) {
       console.error('Error fetching sensor history:', error);
       setHistoryModal(prev => ({ ...prev, loading: false }));
