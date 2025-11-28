@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-01-21
+
+### Fixed
+- ✅ **All Remaining Frontend API Endpoints Fixed**
+  - Added `/api/` prefix to all remaining endpoints in `scadaBackendService.ts`
+  - Fixed endpoints: `/sensors`, `/sensors/mqtt-topics`, `/alarms`, `/alarms/active`, `/machines/{id}/alarms`, `/logs`
+  - All endpoints now correctly return JSON instead of HTML
+
+- ✅ **Alarm Endpoints Authentication Removed**
+  - Removed `get_current_user` dependency from:
+    - `/api/alarms` (GET)
+    - `/api/alarms/active` (GET)
+    - `/api/machines/{machine_id}/alarms` (GET)
+  - Alarms page now accessible without authentication
+
+- ✅ **Inventory Page Enhancements**
+  - Now displays initial sensor values on page load (via `/api/sensors/values`)
+  - Fixed WebSocket URL to use relative paths for proper nginx proxy handling
+  - Uses correct protocol (ws:// or wss://) based on page protocol
+  - All sensor values now visible immediately after loading, plus real-time updates via WebSocket
+
 ## [0.2.1] - 2025-01-21
 
 ### Fixed

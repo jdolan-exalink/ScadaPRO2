@@ -4,9 +4,9 @@
  */
 
 export const VERSION_INFO = {
-  version: '0.2.0',
-  buildDate: '2025-01-27',
-  buildNumber: '001',
+  version: '0.2.2',
+  buildDate: '2025-01-21',
+  buildNumber: '002',
   environment: import.meta.env.MODE || 'production',
   
   // Feature flags
