@@ -1034,8 +1034,8 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
 @app.get("/api/sensors/{sensor_identifier}/history")
 async def get_sensor_history(
     sensor_identifier: str,
-    start: datetime = Query(None, alias="from"),
-    end: datetime = Query(None, alias="to"),
+    start: Optional[datetime] = Query(None, alias="from"),
+    end: Optional[datetime] = Query(None, alias="to"),
     hours: int = Query(6),
     db: AsyncSession = Depends(get_db)
 ):
