@@ -22,6 +22,8 @@ interface AppContextType {
   currentBackend: BackendConnection | null;
   setCurrentBackend: (backend: BackendConnection) => void;
   refreshBackends: () => Promise<void>;
+  isFullscreen: boolean;
+  setIsFullscreen: (value: boolean) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -128,6 +130,7 @@ const AppWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [backends, setBackends] = useState<BackendConnection[]>([]);
   const [currentBackend, setCurrentBackend] = useState<BackendConnection | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const refreshBackends = async () => {
     try {
@@ -168,7 +171,7 @@ const AppWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   return (
-    <AppContext.Provider value={{ backends, currentBackend, setCurrentBackend, refreshBackends }}>
+    <AppContext.Provider value={{ backends, currentBackend, setCurrentBackend, refreshBackends, isFullscreen, setIsFullscreen }}>
       <HashRouter>
         {children}
       </HashRouter>

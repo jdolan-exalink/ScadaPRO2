@@ -38,11 +38,40 @@ const getBackendUrl = (): string => {
 class ScadaBackendService {
   private apiUrl: string;
   private apiToken: string | null = null;
+  private tokenInitialized: boolean = false;
 
   constructor() {
     this.apiUrl = getBackendUrl();
-    // Try to load API token from environment or localStorage
+    // Try to load API token from environment or localStorage first
     this.apiToken = import.meta.env.VITE_API_TOKEN || localStorage.getItem('api_token');
+    
+    if (this.apiToken) {
+      this.tokenInitialized = true;
+    } else {
+      // If no token found, try to fetch it from the backend immediately
+      this.initializeToken();
+    }
+  }
+
+  /**
+   * Initialize API token by fetching from backend
+   */
+  private async initializeToken(): Promise<void> {
+    if (this.tokenInitialized) return; // Don't fetch twice
+    
+    try {
+      const response = await fetch(`${this.apiUrl}/api/token`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          this.apiToken = data.token;
+          localStorage.setItem('api_token', data.token);
+          this.tokenInitialized = true;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch API token from backend:', error);
+    }
   }
 
   /**
@@ -63,6 +92,19 @@ class ScadaBackendService {
   /**
    * Build Authorization header if token is available
    */
+  /**
+   * Ensure token is initialized before making requests
+   */
+  async ensureTokenReady(): Promise<void> {
+    if (!this.tokenInitialized && !this.apiToken) {
+      await this.initializeToken();
+      // Wait a bit more if still not initialized
+      if (!this.tokenInitialized) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
+
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -79,6 +121,9 @@ class ScadaBackendService {
    * Make a GET request to the backend
    */
   private async fetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    // Ensure token is ready before making request
+    await this.ensureTokenReady();
+    
     const url = `${this.apiUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
     const response = await fetch(url, {
       ...options,
@@ -89,10 +134,11 @@ class ScadaBackendService {
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         // Clear token if unauthorized
         this.apiToken = null;
         localStorage.removeItem('api_token');
+        this.tokenInitialized = false;
       }
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
@@ -498,6 +544,19 @@ class ScadaBackendService {
   }
 
   /**
+   * GET /api/machines/{machine_id}/alarm-sensors - Get available alarm sensors for a machine
+   */
+  async getMachineAlarmSensors(machineId: number): Promise<any | null> {
+    try {
+      const data = await this.fetch<any>(`/api/machines/${machineId}/alarm-sensors`);
+      return data;
+    } catch (error) {
+      console.error(`Failed to fetch alarm sensors for machine ${machineId}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * POST /api/alarms - Create a new alarm (if backend supports it)
    */
   async createAlarm(alarmData: any): Promise<any | null> {
@@ -546,6 +605,106 @@ class ScadaBackendService {
     } catch (error) {
       console.error('Failed to fetch logs:', error);
       return [];
+    }
+  }
+
+  // =====================================================
+  // Sensor Logs Endpoints
+  // =====================================================
+
+  /**
+   * GET /api/sensors/logs - Get sensor logs with filtering and pagination
+   */
+  async getSensorLogs(filters?: {
+    sensor_id?: number;
+    machine_id?: number;
+    severity?: string;
+    start_date?: string;
+    end_date?: string;
+    limit?: number;
+    skip?: number;
+  }): Promise<any[]> {
+    try {
+      let endpoint = '/api/sensors/logs';
+      if (filters) {
+        const params = new URLSearchParams();
+        if (filters.sensor_id) params.append('sensor_id', filters.sensor_id.toString());
+        if (filters.machine_id) params.append('machine_id', filters.machine_id.toString());
+        if (filters.severity) params.append('severity', filters.severity);
+        if (filters.start_date) params.append('start_date', filters.start_date);
+        if (filters.end_date) params.append('end_date', filters.end_date);
+        if (filters.limit) params.append('limit', filters.limit.toString());
+        if (filters.skip) params.append('skip', filters.skip.toString());
+
+        const queryString = params.toString();
+        if (queryString) {
+          endpoint += `?${queryString}`;
+        }
+      }
+
+      const data = await this.fetch<any[]>(endpoint);
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch sensor logs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * POST /api/sensors/logs - Create a new sensor log
+   */
+  async createSensorLog(logData: any): Promise<any | null> {
+    try {
+      const data = await this.fetch<any>('/api/sensors/logs', {
+        method: 'POST',
+        body: JSON.stringify(logData),
+      });
+      return data;
+    } catch (error) {
+      console.error('Failed to create sensor log:', error);
+      return null;
+    }
+  }
+
+  /**
+   * GET /api/sensors/{sensor_id}/severity-config - Get sensor severity configuration
+   */
+  async getSensorSeverityConfig(sensorId: number): Promise<any | null> {
+    try {
+      const data = await this.fetch<any>(`/api/sensors/${sensorId}/severity-config`);
+      return data;
+    } catch (error) {
+      console.error(`Failed to fetch severity config for sensor ${sensorId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * POST /api/sensors/{sensor_id}/severity-config - Update sensor severity configuration
+   */
+  async updateSensorSeverityConfig(sensorId: number, config: any): Promise<any | null> {
+    try {
+      const data = await this.fetch<any>(`/api/sensors/${sensorId}/severity-config`, {
+        method: 'POST',
+        body: JSON.stringify(config),
+      });
+      return data;
+    } catch (error) {
+      console.error(`Failed to update severity config for sensor ${sensorId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * GET /api/sensors/logs/critical/count - Get count of critical alarms
+   */
+  async getCriticalAlarmsCount(): Promise<{ count: number; severity: string } | null> {
+    try {
+      const data = await this.fetch<{ count: number; severity: string }>('/api/sensors/logs/critical/count');
+      return data;
+    } catch (error) {
+      console.error('Failed to fetch critical alarms count:', error);
+      return null;
     }
   }
 

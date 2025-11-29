@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { BellRing, AlertTriangle, AlertCircle, CheckCircle, Clock, Filter, RefreshCw, ChevronDown } from 'lucide-react';
 import { scadaBackendService } from '../../services/scadaBackendService';
+import { AlarmSensorsDisplay } from './AlarmSensorsDisplay';
+import { SensorLogsViewer } from './SensorLogsViewer';
+import { SensorSeverityConfig } from './SensorSeverityConfig';
 
 export const AlarmsPage: React.FC = () => {
   const [activeAlarms, setActiveAlarms] = useState<any[]>([]);
@@ -9,7 +12,9 @@ export const AlarmsPage: React.FC = () => {
   const [filterSeverity, setFilterSeverity] = useState<string>('');
   const [filterMachine, setFilterMachine] = useState<string>('');
   const [machines, setMachines] = useState<any[]>([]);
-  const [view, setView] = useState<'active' | 'all'>('active');
+  const [view, setView] = useState<'active' | 'all' | 'sensors' | 'logs' | 'config'>('logs');
+  const [machineAlarmSensors, setMachineAlarmSensors] = useState<{ [key: number]: any }>({});
+  const [loadingSensors, setLoadingSensors] = useState<{ [key: number]: boolean }>({});
 
   // Load alarms on mount
   useEffect(() => {
@@ -20,12 +25,42 @@ export const AlarmsPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Load alarm sensors when view changes to sensors
+  useEffect(() => {
+    if (view === 'sensors' && machines.length > 0) {
+      loadAllAlarmSensors();
+    }
+  }, [view, machines]);
+
   const loadMachines = async () => {
     try {
       const machineList = await scadaBackendService.getMachines();
       setMachines(machineList);
     } catch (error) {
       console.error('Error loading machines:', error);
+    }
+  };
+
+  const loadAlarmSensorsForMachine = async (machineId: number) => {
+    try {
+      setLoadingSensors(prev => ({ ...prev, [machineId]: true }));
+      const sensorsData = await scadaBackendService.getMachineAlarmSensors(machineId);
+      if (sensorsData) {
+        setMachineAlarmSensors(prev => ({ ...prev, [machineId]: sensorsData }));
+      }
+    } catch (error) {
+      console.error(`Error loading alarm sensors for machine ${machineId}:`, error);
+    } finally {
+      setLoadingSensors(prev => ({ ...prev, [machineId]: false }));
+    }
+  };
+
+  const loadAllAlarmSensors = async () => {
+    try {
+      const promises = machines.map(machine => loadAlarmSensorsForMachine(machine.id));
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Error loading alarm sensors:', error);
     }
   };
 
@@ -123,10 +158,10 @@ export const AlarmsPage: React.FC = () => {
 
       {/* Tabs and Filters */}
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-        <div className="flex items-center gap-2 bg-scada-800 rounded-lg p-2 border border-scada-700">
+        <div className="flex items-center gap-2 bg-scada-800 rounded-lg p-2 border border-scada-700 flex-wrap">
           <button
             onClick={() => setView('active')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
               view === 'active'
                 ? 'bg-red-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -136,7 +171,7 @@ export const AlarmsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setView('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
               view === 'all'
                 ? 'bg-blue-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -144,132 +179,201 @@ export const AlarmsPage: React.FC = () => {
           >
             Historial
           </button>
+          <button
+            onClick={() => setView('logs')}
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
+              view === 'logs'
+                ? 'bg-purple-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Logs de Sensores
+          </button>
+          <button
+            onClick={() => setView('sensors')}
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
+              view === 'sensors'
+                ? 'bg-green-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Sensores
+          </button>
+          <button
+            onClick={() => setView('config')}
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
+              view === 'config'
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Configuración
+          </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-scada-400" />
+        {/* Filters - Hide in sensors, logs, config views */}
+        {view !== 'sensors' && view !== 'logs' && view !== 'config' && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter size={18} className="text-scada-400" />
+              <select
+                value={filterMachine}
+                onChange={(e) => {
+                  setFilterMachine(e.target.value);
+                  loadAlarms();
+                }}
+                className="px-3 py-2 bg-scada-800 border border-scada-700 rounded-lg text-slate-200 text-sm"
+              >
+                <option value="">Todas las máquinas</option>
+                {machines.map((m) => (
+                  <option key={m.id} value={m.code}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <select
-              value={filterMachine}
+              value={filterSeverity}
               onChange={(e) => {
-                setFilterMachine(e.target.value);
+                setFilterSeverity(e.target.value);
                 loadAlarms();
               }}
               className="px-3 py-2 bg-scada-800 border border-scada-700 rounded-lg text-slate-200 text-sm"
             >
-              <option value="">Todas las máquinas</option>
-              {machines.map((m) => (
-                <option key={m.id} value={m.code}>
-                  {m.name}
-                </option>
-              ))}
+              <option value="">Todas las severidades</option>
+              <option value="critical">Crítica</option>
+              <option value="high">Alta</option>
+              <option value="medium">Media</option>
+              <option value="low">Baja</option>
             </select>
           </div>
-
-          <select
-            value={filterSeverity}
-            onChange={(e) => {
-              setFilterSeverity(e.target.value);
-              loadAlarms();
-            }}
-            className="px-3 py-2 bg-scada-800 border border-scada-700 rounded-lg text-slate-200 text-sm"
-          >
-            <option value="">Todas las severidades</option>
-            <option value="critical">Crítica</option>
-            <option value="high">Alta</option>
-            <option value="medium">Media</option>
-            <option value="low">Baja</option>
-          </select>
-        </div>
+        )}
       </div>
 
-      {/* Alarms List */}
+      {/* Alarms/Sensors/Logs List */}
       <div className="flex-1 overflow-auto">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-scada-400">Cargando alarmas...</p>
-          </div>
-        ) : displayAlarms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 space-y-4">
-            <CheckCircle size={48} className="text-green-500" />
-            <div className="text-center">
-              <p className="text-xl text-white font-semibold">
-                {view === 'active' ? 'Sin alarmas activas' : 'Sin alarmas'}
-              </p>
-              <p className="text-scada-400 text-sm mt-1">
-                {view === 'active'
-                  ? 'Todo el sistema está funcionando correctamente'
-                  : 'No hay registros de alarmas'}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {displayAlarms.map((alarm) => (
-              <div
-                key={alarm.id}
-                className={`border-l-4 rounded-lg p-4 transition hover:shadow-lg ${getSeverityColor(
-                  alarm.severity
-                )} border border-opacity-50`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    {/* Icon */}
-                    <div className="mt-1">{getSeverityIcon(alarm.severity)}</div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-sm md:text-base">
-                          {alarm.alarm_name || 'Sin nombre'}
-                        </h3>
-                        <span className="text-xs px-2 py-1 bg-black bg-opacity-30 rounded">
-                          {alarm.alarm_code || 'N/A'}
-                        </span>
-                        <span className="text-xs px-2 py-1 bg-black bg-opacity-30 rounded capitalize">
-                          {alarm.severity || 'unknown'}
-                        </span>
-                      </div>
-
-                      <p className="text-xs md:text-sm mt-2 opacity-80">
-                        Máquina: <span className="font-semibold">{alarm.machine_name || alarm.machine_code}</span>
-                      </p>
-
-                      {alarm.sensor_name && (
-                        <p className="text-xs md:text-sm opacity-75">
-                          Sensor: {alarm.sensor_name}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 mt-3 text-xs opacity-75 flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <Clock size={14} />
-                          Activada: {formatTime(alarm.timestamp_on)}
-                        </span>
-                        {alarm.timestamp_off && (
-                          <span>Desactivada: {formatTime(alarm.timestamp_off)}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="ml-4 text-right">
-                    <div
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                        alarm.status === 1 || !alarm.timestamp_off
-                          ? 'bg-red-500 text-white'
-                          : 'bg-green-500 text-white'
-                      }`}
-                    >
-                      {alarm.status === 1 || !alarm.timestamp_off ? 'ACTIVA' : 'RESUELTA'}
-                    </div>
-                  </div>
+        {view === 'logs' ? (
+          // Sensor Logs View
+          <SensorLogsViewer machines={machines} />
+        ) : view === 'config' ? (
+          // Sensor Severity Config View
+          <SensorSeverityConfig machines={machines} />
+        ) : view === 'sensors' ? (
+          // Sensors View
+          <div className="space-y-4">
+            {machines.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                <AlertCircle size={48} className="text-yellow-500" />
+                <div className="text-center">
+                  <p className="text-xl text-white font-semibold">No hay máquinas disponibles</p>
+                  <p className="text-scada-400 text-sm mt-1">
+                    Configure máquinas para ver los sensores de alarmas disponibles
+                  </p>
                 </div>
               </div>
-            ))}
+            ) : (
+              machines.map((machine) => (
+                <AlarmSensorsDisplay
+                  key={machine.id}
+                  machineId={machine.id}
+                  machineCode={machine.code}
+                  machineName={machine.name}
+                  sensors={machineAlarmSensors[machine.id]?.sensors || []}
+                  isLoading={loadingSensors[machine.id] || false}
+                />
+              ))
+            )}
           </div>
+        ) : (
+          // Alarms View
+          <>
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-scada-400">Cargando alarmas...</p>
+              </div>
+            ) : displayAlarms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                <CheckCircle size={48} className="text-green-500" />
+                <div className="text-center">
+                  <p className="text-xl text-white font-semibold">
+                    {view === 'active' ? 'Sin alarmas activas' : 'Sin alarmas'}
+                  </p>
+                  <p className="text-scada-400 text-sm mt-1">
+                    {view === 'active'
+                      ? 'Todo el sistema está funcionando correctamente'
+                      : 'No hay registros de alarmas'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {displayAlarms.map((alarm) => (
+                  <div
+                    key={alarm.id}
+                    className={`border-l-4 rounded-lg p-4 transition hover:shadow-lg ${getSeverityColor(
+                      alarm.severity
+                    )} border border-opacity-50`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        {/* Icon */}
+                        <div className="mt-1">{getSeverityIcon(alarm.severity)}</div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-sm md:text-base">
+                              {alarm.alarm_name || 'Sin nombre'}
+                            </h3>
+                            <span className="text-xs px-2 py-1 bg-black bg-opacity-30 rounded">
+                              {alarm.alarm_code || 'N/A'}
+                            </span>
+                            <span className="text-xs px-2 py-1 bg-black bg-opacity-30 rounded capitalize">
+                              {alarm.severity || 'unknown'}
+                            </span>
+                          </div>
+
+                          <p className="text-xs md:text-sm mt-2 opacity-80">
+                            Máquina: <span className="font-semibold">{alarm.machine_name || alarm.machine_code}</span>
+                          </p>
+
+                          {alarm.sensor_name && (
+                            <p className="text-xs md:text-sm opacity-75">
+                              Sensor: {alarm.sensor_name}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-4 mt-3 text-xs opacity-75 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <Clock size={14} />
+                              Activada: {formatTime(alarm.timestamp_on)}
+                            </span>
+                            {alarm.timestamp_off && (
+                              <span>Desactivada: {formatTime(alarm.timestamp_off)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="ml-4 text-right">
+                        <div
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                            alarm.status === 1 || !alarm.timestamp_off
+                              ? 'bg-red-500 text-white'
+                              : 'bg-green-500 text-white'
+                          }`}
+                        >
+                          {alarm.status === 1 || !alarm.timestamp_off ? 'ACTIVA' : 'RESUELTA'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 

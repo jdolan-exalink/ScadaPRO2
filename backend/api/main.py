@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPExcept
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from .database import engine, Base, get_db, AsyncSessionLocal
 from . import models, schemas
 import json
@@ -369,6 +369,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/api/token")
+async def get_api_token():
+    """
+    Get API token for frontend authentication.
+    This is a public endpoint that returns the API token for use in Authorization headers.
+    """
+    global API_TOKEN
+    if not API_TOKEN:
+        get_or_create_token()
+    return {"token": API_TOKEN}
 
 @app.get("/api/mqtt/stats")
 async def mqtt_stats(db: AsyncSession = Depends(get_db)):
@@ -1056,6 +1067,144 @@ async def get_sensors_with_mqtt_topics(
     
     return sensors_with_mqtt
 
+# =====================================================
+# Sensor Logs Endpoints - MUST BE BEFORE {sensor_id}
+# =====================================================
+
+@app.get("/api/sensors/logs", response_model=List[schemas.SensorLogResponse])
+async def get_sensor_logs(
+    sensor_id: Optional[int] = None,
+    machine_id: Optional[int] = None,
+    severity: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 20,
+    skip: int = 0,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Obtener historial de logs de sensores con filtros y paginación.
+    
+    Parámetros:
+    - sensor_id: filtrar por sensor específico
+    - machine_id: filtrar por máquina
+    - severity: filtrar por severidad (INFO, NORMAL, ALERTA, CRITICAL)
+    - start_date: fecha inicio (ISO 8601 string)
+    - end_date: fecha fin (ISO 8601 string)
+    - limit: registros por página (default: 20, máximo: 100)
+    - skip: número de registros a saltar
+    """
+    # Limitar el máximo de registros
+    limit = min(limit, 100)
+    
+    # Convertir strings a datetime si es necesario
+    start_dt = None
+    end_dt = None
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        except:
+            pass
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    query = select(
+        models.SensorLog,
+        models.Sensor.code.label("sensor_code"),
+        models.Sensor.name.label("sensor_name"),
+        models.Machine.code.label("machine_code"),
+        models.Machine.name.label("machine_name")
+    ).select_from(models.SensorLog).outerjoin(
+        models.Sensor, models.SensorLog.sensor_id == models.Sensor.id
+    ).outerjoin(
+        models.Machine, models.SensorLog.machine_id == models.Machine.id
+    )
+    
+    # Aplicar filtros
+    if sensor_id:
+        query = query.where(models.SensorLog.sensor_id == sensor_id)
+    if machine_id:
+        query = query.where(models.SensorLog.machine_id == machine_id)
+    if severity:
+        query = query.where(models.SensorLog.severity == severity)
+    if start_dt:
+        query = query.where(models.SensorLog.timestamp >= start_dt)
+    if end_dt:
+        query = query.where(models.SensorLog.timestamp <= end_dt)
+    
+    # Ordenar por timestamp descendente (más recientes primero)
+    query = query.order_by(desc(models.SensorLog.timestamp))
+    
+    # Aplicar paginación
+    query = query.offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    logs_response = []
+    for row in rows:
+        log = row[0]
+        log_data = schemas.SensorLogResponse(
+            id=log.id,
+            sensor_id=log.sensor_id,
+            machine_id=log.machine_id,
+            timestamp=log.timestamp,
+            previous_value=log.previous_value,
+            current_value=log.current_value,
+            variation_percent=log.variation_percent,
+            severity=log.severity,
+            unit=log.unit,
+            created_at=log.timestamp,
+            sensor_code=row[1],
+            sensor_name=row[2],
+            machine_code=row[3],
+            machine_name=row[4]
+        )
+        logs_response.append(log_data)
+    
+    return logs_response
+
+@app.get("/api/sensors/logs/critical/count")
+async def get_critical_alarms_count(db: AsyncSession = Depends(get_db)):
+    """
+    Obtener el número total de alarmas CRITICAL activas.
+    Se usa para mostrar un badge en el sidebar.
+    """
+    try:
+        # Contar logs con severity CRITICAL
+        query = select(func.count(models.SensorLog.id)).where(
+            models.SensorLog.severity == "CRITICAL"
+        )
+        result = await db.execute(query)
+        count = result.scalar() or 0
+        
+        return {"count": count, "severity": "CRITICAL"}
+    except Exception as e:
+        logger.error(f"Error getting critical alarms count: {e}")
+        return {"count": 0, "severity": "CRITICAL", "error": str(e)}
+
+@app.post("/api/sensors/logs", response_model=schemas.SensorLog, dependencies=[Depends(get_current_user)])
+async def create_sensor_log(
+    log: schemas.SensorLogCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Crear un nuevo registro de log de sensor.
+    Normalmente se crea automáticamente desde el collector.
+    """
+    log_dict = log.dict()
+    if log_dict.get("timestamp") is None:
+        log_dict["timestamp"] = datetime.now(timezone.utc)
+    
+    db_log = models.SensorLog(**log_dict)
+    db.add(db_log)
+    await db.commit()
+    await db.refresh(db_log)
+    return db_log
+
 @app.get("/api/sensors/{sensor_id}", response_model=schemas.Sensor)
 async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Sensor).where(models.Sensor.id == sensor_id))
@@ -1380,6 +1529,63 @@ async def get_machine_alarms(
         alarms_history.append(alarm_hist)
     
     return alarms_history
+
+@app.get("/api/machines/{machine_id}/alarm-sensors", response_model=schemas.MachineAlarmSensors)
+async def get_machine_alarm_sensors(
+    machine_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Obtener los sensores disponibles de una máquina para crear alarmas.
+    Retorna todos los sensores asociados a los PLCs de la máquina.
+    """
+    # Obtener la máquina
+    query_machine = select(models.Machine).where(models.Machine.id == machine_id)
+    result_machine = await db.execute(query_machine)
+    machine = result_machine.scalars().first()
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Máquina no encontrada")
+    
+    # Obtener todos los sensores de los PLCs de esta máquina
+    query_sensors = select(
+        models.Sensor,
+        models.PLC.id.label("plc_id"),
+        models.PLC.code.label("plc_code"),
+        models.PLC.name.label("plc_name")
+    ).select_from(models.Sensor).join(
+        models.PLC, models.Sensor.plc_id == models.PLC.id
+    ).where(
+        models.PLC.machine_id == machine_id
+    ).order_by(models.PLC.code, models.Sensor.code)
+    
+    result_sensors = await db.execute(query_sensors)
+    rows = result_sensors.all()
+    
+    sensors = []
+    for row in rows:
+        sensor = row[0]
+        alarm_sensor = schemas.AlarmSensorInfo(
+            id=sensor.id,
+            code=sensor.code,
+            name=sensor.name,
+            type=sensor.type,
+            unit=sensor.unit,
+            address=sensor.address,
+            min_value=sensor.min_value,
+            max_value=sensor.max_value,
+            plc_id=row[1],
+            plc_code=row[2],
+            plc_name=row[3]
+        )
+        sensors.append(alarm_sensor)
+    
+    return schemas.MachineAlarmSensors(
+        machine_id=machine.id,
+        machine_code=machine.code,
+        machine_name=machine.name,
+        sensors=sensors
+    )
 
 @app.post("/api/alarms", response_model=schemas.MachineAlarm, dependencies=[Depends(get_current_user)])
 async def create_alarm(
@@ -1780,3 +1986,116 @@ async def remove_machine_settings(machine_path_encoded: str):
         raise HTTPException(status_code=404, detail=f"Machine '{machine_path}' not found in settings")
     
     return {"message": f"Machine '{machine_path}' removed from settings successfully"}
+
+# =====================================================
+# Sensor Severity Config Endpoints
+# =====================================================
+
+@app.get("/api/sensors/{sensor_id}/severity-config", response_model=schemas.SensorSeverityConfigResponse)
+async def get_sensor_severity_config(
+    sensor_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Obtener la configuración de severidad de un sensor.
+    Si no existe, crear una con valores por defecto.
+    """
+    # Obtener sensor
+    result_sensor = await db.execute(select(models.Sensor).where(models.Sensor.id == sensor_id))
+    sensor = result_sensor.scalars().first()
+    
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor no encontrado")
+    
+    # Obtener configuración
+    result_config = await db.execute(
+        select(models.SensorSeverityConfig).where(
+            models.SensorSeverityConfig.sensor_id == sensor_id
+        )
+    )
+    config = result_config.scalars().first()
+    
+    # Si no existe, crear una por defecto
+    if not config:
+        config = models.SensorSeverityConfig(
+            sensor_id=sensor_id,
+            default_severity="INFO",
+            variation_threshold_normal=5.0,
+            variation_threshold_alert=10.0,
+            variation_threshold_critical=20.0,
+            log_enabled=True,
+            log_interval_seconds=0
+        )
+        db.add(config)
+        await db.commit()
+        await db.refresh(config)
+    
+    return schemas.SensorSeverityConfigResponse(
+        id=config.id,
+        sensor_id=config.sensor_id,
+        default_severity=config.default_severity,
+        variation_threshold_normal=config.variation_threshold_normal,
+        variation_threshold_alert=config.variation_threshold_alert,
+        variation_threshold_critical=config.variation_threshold_critical,
+        log_enabled=config.log_enabled,
+        log_interval_seconds=config.log_interval_seconds,
+        created_at=config.created_at,
+        updated_at=config.updated_at,
+        is_boolean_critical=config.is_boolean_critical,
+        sensor_code=sensor.code,
+        sensor_name=sensor.name,
+        sensor_type=sensor.type
+    )
+
+@app.post("/api/sensors/{sensor_id}/severity-config", response_model=schemas.SensorSeverityConfigResponse, dependencies=[Depends(get_current_user)])
+async def update_sensor_severity_config(
+    sensor_id: int,
+    config: schemas.SensorSeverityConfigBase,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Actualizar la configuración de severidad de un sensor.
+    """
+    # Obtener sensor
+    result_sensor = await db.execute(select(models.Sensor).where(models.Sensor.id == sensor_id))
+    sensor = result_sensor.scalars().first()
+    
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor no encontrado")
+    
+    # Obtener o crear configuración
+    result_config = await db.execute(
+        select(models.SensorSeverityConfig).where(
+            models.SensorSeverityConfig.sensor_id == sensor_id
+        )
+    )
+    db_config = result_config.scalars().first()
+    
+    if not db_config:
+        db_config = models.SensorSeverityConfig(sensor_id=sensor_id)
+        db.add(db_config)
+    
+    # Actualizar campos
+    for key, value in config.dict().items():
+        setattr(db_config, key, value)
+    
+    await db.commit()
+    await db.refresh(db_config)
+    
+    return schemas.SensorSeverityConfigResponse(
+        id=db_config.id,
+        sensor_id=db_config.sensor_id,
+        default_severity=db_config.default_severity,
+        variation_threshold_normal=db_config.variation_threshold_normal,
+        variation_threshold_alert=db_config.variation_threshold_alert,
+        variation_threshold_critical=db_config.variation_threshold_critical,
+        log_enabled=db_config.log_enabled,
+        log_interval_seconds=db_config.log_interval_seconds,
+        is_boolean_critical=db_config.is_boolean_critical,
+        created_at=db_config.created_at,
+        updated_at=db_config.updated_at,
+        sensor_code=sensor.code,
+        sensor_name=sensor.name,
+        sensor_type=sensor.type
+    )
+

@@ -123,17 +123,20 @@ export const InventoryPage: React.FC = () => {
       
       // Load initial sensor values
       try {
-        const sensorValues = await scadaBackendService.getSensorValues();
+        const result = await scadaBackendService.getSensorValues();
         const valueMap: Record<string, SensorValue> = {};
-        sensorValues.forEach((sv: any) => {
-          if (sv.sensor_code) {
-            valueMap[sv.sensor_code] = {
-              value: sv.value,
+        
+        // getSensorValues returns { sensors: {...} }
+        if (result.sensors && typeof result.sensors === 'object') {
+          Object.entries(result.sensors).forEach(([sensorCode, sensorData]: [string, any]) => {
+            valueMap[sensorCode] = {
+              value: sensorData.value,
               timestamp: Date.now(),
               flash: false
             };
-          }
-        });
+          });
+        }
+        
         setSensorValues(valueMap);
         console.log('📊 Loaded initial sensor values:', Object.keys(valueMap).length);
       } catch (e) {

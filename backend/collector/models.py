@@ -101,3 +101,54 @@ class PLCStatus(Base):
     last_error = Column(String, nullable=True)
 
     plc = relationship("PLC", back_populates="status")
+
+class SensorLog(Base):
+    """Registro de cambios en valores de sensores"""
+    __tablename__ = "sensor_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(Integer, ForeignKey("sensors.id"), nullable=False, index=True)
+    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=False, index=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    
+    # Valores del sensor
+    previous_value = Column(Float, nullable=True)
+    current_value = Column(Float, nullable=False)
+    variation_percent = Column(Float, nullable=True)  # Porcentaje de variación
+    
+    # Información del evento
+    severity = Column(String, default="INFO")  # INFO, NORMAL, ALERTA, CRITICAL
+    unit = Column(String, nullable=True)
+    
+    # Relaciones
+    sensor = relationship("Sensor", foreign_keys=[sensor_id])
+    machine = relationship("Machine", foreign_keys=[machine_id])
+
+class SensorSeverityConfig(Base):
+    """Configuración de severidad y thresholds por sensor"""
+    __tablename__ = "sensor_severity_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(Integer, ForeignKey("sensors.id"), nullable=False, unique=True, index=True)
+    
+    # Configuración de severidad
+    default_severity = Column(String, default="INFO")  # INFO, NORMAL, ALERTA, CRITICAL
+    
+    # Thresholds de variación para cada severidad (en porcentaje)
+    variation_threshold_normal = Column(Float, default=5.0)  # % - activar NORMAL
+    variation_threshold_alert = Column(Float, default=10.0)  # % - activar ALERTA
+    variation_threshold_critical = Column(Float, default=20.0)  # % - activar CRITICAL
+    
+    # Para sensores booleanos: marcar como crítico si es true (ej: motor apagado, alarma activa)
+    is_boolean_critical = Column(Boolean, default=False)  # Si es True, cualquier cambio = CRITICAL
+    
+    # Parámetros de logging
+    log_enabled = Column(Boolean, default=True)
+    log_interval_seconds = Column(Integer, default=0)  # 0 = registra siempre que hay variación
+    
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    sensor = relationship("Sensor", foreign_keys=[sensor_id])
+

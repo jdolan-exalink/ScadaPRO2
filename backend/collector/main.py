@@ -78,6 +78,9 @@ class DBStats:
 
 db_stats = DBStats()
 
+# Global flag to track if we're in the initial startup phase
+initial_data_loaded = False
+
 # Config
 CONFIG_PATH = os.getenv("CONFIG_PATH", "./config")
 SETTINGS_FILE = os.path.join(CONFIG_PATH, "settings.yml")
@@ -322,20 +325,20 @@ def get_config_mtime():
                 mtime = max(mtime, os.path.getmtime(os.path.join(CONFIG_PATH, f)))
     return mtime
 
-async def handle_sensor_alarm(db: AsyncSession, sensor, machine, sensor_conf: dict, current_value: float, timestamp: datetime):
+async def handle_sensor_alarm(db: AsyncSession, sensor, machine, current_value: float, timestamp: datetime):
     """
     Detectar y guardar alarmas cuando sensores marcados como is_alarm cambian de estado.
     """
     try:
         # Revisar si el sensor está marcado como alarma
-        is_alarm = sensor_conf.get("is_alarm", False)
+        is_alarm = sensor.is_alarm if hasattr(sensor, 'is_alarm') else False
         if not is_alarm:
             return
         
-        alarm_code = sensor_conf.get("code")
-        alarm_name = sensor_conf.get("name")
-        severity = sensor_conf.get("severity", "high")
-        color = sensor_conf.get("color", "#FF0000")
+        alarm_code = sensor.code
+        alarm_name = sensor.name
+        severity = "high"  # Default severity
+        color = "#FF0000"  # Default red color
         
         # Obtener el valor anterior del sensor
         result = await db.execute(
@@ -394,11 +397,212 @@ async def handle_sensor_alarm(db: AsyncSession, sensor, machine, sensor_conf: di
     except Exception as e:
         logger.error(f"Error handling sensor alarm for {sensor.code}: {e}")
 
-async def read_group_loop(group_key, plcs_in_group):
+async def handle_sensor_log(db: AsyncSession, sensor, machine_id: int, current_value: float, timestamp: datetime, is_initial_read: bool = False):
+    """
+    Registrar cambios de sensores en el log cuando la variación es mayor al threshold configurado.
+    Asigna severidad basada en los umbrales de configuración del sensor.
+    
+    Args:
+        db: Database session
+        sensor: Sensor model instance
+        machine_id: Machine ID
+        current_value: Current sensor value
+        timestamp: Timestamp of the reading
+        is_initial_read: If True, register initial value as INFO without requiring variation threshold
+    """
+    try:
+        logger.debug(f"🔍 handle_sensor_log called for {sensor.code}, is_initial_read={is_initial_read}")
+        
+        # Obtener configuración de severidad del sensor
+        result = await db.execute(
+            select(models.SensorSeverityConfig).where(
+                models.SensorSeverityConfig.sensor_id == sensor.id
+            )
+        )
+        config = result.scalar_one_or_none()
+        
+        # Si no existe configuración, crearla por defecto
+        if not config:
+            config = models.SensorSeverityConfig(
+                sensor_id=sensor.id,
+                default_severity="INFO",
+                variation_threshold_normal=5.0,
+                variation_threshold_alert=10.0,
+                variation_threshold_critical=20.0,
+                log_enabled=True,
+                log_interval_seconds=0
+            )
+            db.add(config)
+            await db.commit()
+        
+        # Si el logging está deshabilitado, salir
+        if not config.log_enabled:
+            logger.debug(f"  -> Logging disabled for {sensor.code}")
+            return
+        
+        # Obtener valor anterior
+        result = await db.execute(
+            select(models.SensorLastValue).where(models.SensorLastValue.sensor_id == sensor.id)
+        )
+        last_value_record = result.scalar_one_or_none()
+        prev_value = last_value_record.value if last_value_record else None
+        logger.debug(f"  -> prev_value={prev_value}, current_value={current_value}")
+        
+        # Si no hay valor anterior (lectura inicial), registrar como INFO
+        if prev_value is None:
+            logger.info(f"📊 Registering initial value for sensor {sensor.code}: {current_value} {sensor.unit}")
+            sensor_log = models.SensorLog(
+                sensor_id=sensor.id,
+                machine_id=machine_id,
+                timestamp=timestamp,
+                previous_value=None,
+                current_value=current_value,
+                variation_percent=0.0,
+                severity="INFO",
+                unit=sensor.unit
+            )
+            db.add(sensor_log)
+            
+            # Guardar en last_value
+            if last_value_record:
+                last_value_record.value = current_value
+                last_value_record.timestamp = timestamp
+            else:
+                last_value_record = models.SensorLastValue(
+                    sensor_id=sensor.id,
+                    timestamp=timestamp,
+                    value=current_value,
+                    quality=1.0
+                )
+                db.add(last_value_record)
+            return
+        
+        # Verificar si es sensor booleano crítico
+        is_boolean = sensor.type and 'boolean' in sensor.type.lower()
+        
+        # Para sensores booleanos críticos: cualquier cambio es CRITICAL
+        if is_boolean and config.is_boolean_critical:
+            if current_value != prev_value:
+                sensor_log = models.SensorLog(
+                    sensor_id=sensor.id,
+                    machine_id=machine_id,
+                    timestamp=timestamp,
+                    previous_value=prev_value,
+                    current_value=current_value,
+                    variation_percent=0.0,  # No aplicable a booleanos
+                    severity="CRITICAL",
+                    unit=sensor.unit
+                )
+                db.add(sensor_log)
+                logger.debug(f"📝 SensorLog (Boolean Critical): {sensor.name} - {prev_value} → {current_value} (CRITICAL)")
+                
+                # Update last_value_record
+                if last_value_record:
+                    last_value_record.value = current_value
+                    last_value_record.timestamp = timestamp
+                else:
+                    last_value_record = models.SensorLastValue(
+                        sensor_id=sensor.id,
+                        timestamp=timestamp,
+                        value=current_value,
+                        quality=1.0
+                    )
+                    db.add(last_value_record)
+            return
+        
+        # Para sensores booleanos normales: registrar como INFO sin porcentaje
+        if is_boolean:
+            if current_value != prev_value:
+                sensor_log = models.SensorLog(
+                    sensor_id=sensor.id,
+                    machine_id=machine_id,
+                    timestamp=timestamp,
+                    previous_value=prev_value,
+                    current_value=current_value,
+                    variation_percent=0.0,  # No aplicable a booleanos
+                    severity="INFO",
+                    unit=sensor.unit
+                )
+                db.add(sensor_log)
+                logger.debug(f"📝 SensorLog (Boolean): {sensor.name} - {prev_value} → {current_value} (INFO)")
+                
+                # Update last_value_record
+                if last_value_record:
+                    last_value_record.value = current_value
+                    last_value_record.timestamp = timestamp
+                else:
+                    last_value_record = models.SensorLastValue(
+                        sensor_id=sensor.id,
+                        timestamp=timestamp,
+                        value=current_value,
+                        quality=1.0
+                    )
+                    db.add(last_value_record)
+            return
+        
+        # Calcular variación porcentual (para sensores no booleanos)
+        if abs(prev_value) < 0.0001:  # Prevenir división por casi cero
+            if abs(current_value - prev_value) > 0.0001:  # Hubo cambio significativo
+                variation_percent = 100.0 if current_value > prev_value else -100.0
+            else:
+                return  # Sin cambio significativo
+        else:
+            variation_percent = ((current_value - prev_value) / abs(prev_value)) * 100
+        
+        # Verificar si la variación excede el threshold mínimo (5% por defecto)
+        min_threshold = config.variation_threshold_normal
+        if abs(variation_percent) < min_threshold:
+            return  # No registrar si variación es menor al threshold
+        
+        # Determinar severidad basada en thresholds
+        abs_variation = abs(variation_percent)
+        if abs_variation >= config.variation_threshold_critical:
+            severity = "CRITICAL"
+        elif abs_variation >= config.variation_threshold_alert:
+            severity = "ALERTA"
+        elif abs_variation >= config.variation_threshold_normal:
+            severity = "NORMAL"
+        else:
+            severity = "INFO"
+        
+        # Crear registro de log
+        sensor_log = models.SensorLog(
+            sensor_id=sensor.id,
+            machine_id=machine_id,
+            timestamp=timestamp,
+            previous_value=prev_value,
+            current_value=current_value,
+            variation_percent=round(variation_percent, 2),
+            severity=severity,
+            unit=sensor.unit
+        )
+        db.add(sensor_log)
+        logger.debug(f"📝 SensorLog: {sensor.name} - Variación {variation_percent:.2f}% ({severity})")
+        
+        # Update last_value_record after creating log
+        if last_value_record:
+            last_value_record.value = current_value
+            last_value_record.timestamp = timestamp
+        else:
+            last_value_record = models.SensorLastValue(
+                sensor_id=sensor.id,
+                timestamp=timestamp,
+                value=current_value,
+                quality=1.0
+            )
+            db.add(last_value_record)
+        
+    except Exception as e:
+        logger.error(f"❌ Error handling sensor log for {sensor.code}: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+
+async def read_group_loop(group_key, plcs_in_group, is_initial_startup: bool = False):
     ip, port = group_key
     logger.info(f"Starting shared connection loop for {ip}:{port} (handling {len(plcs_in_group)} logical PLCs)")
     
     client = AsyncModbusTcpClient(ip, port=port)
+    first_cycle = True  # Track if this is the first cycle for this group
     
     while True:
         try:
@@ -425,6 +629,13 @@ async def read_group_loop(group_key, plcs_in_group):
                 # Open DB session once per PLC poll to reduce overhead
                 try:
                     async with AsyncSessionLocal() as db:
+                        # Get machine object for this PLC
+                        result_m = await db.execute(select(models.Machine).where(models.Machine.id == plc.machine_id))
+                        machine = result_m.scalar_one_or_none()
+                        if not machine:
+                            logger.warning(f"⚠️ Machine not found for PLC {plc.code}")
+                            continue
+                        
                         for sensor in sensors:
                             value = None
                             quality = 0
@@ -528,7 +739,16 @@ async def read_group_loop(group_key, plcs_in_group):
                                     )
                                     db.add(sensor_data)
                                     
-                                    # Update Last Value
+                                    # Handle alarms if this sensor is marked as is_alarm
+                                    await handle_sensor_alarm(db, sensor, machine, value, timestamp)
+                                    
+                                    # Handle sensor logs (registra cambios en el historial)
+                                    # On the first cycle of system startup, register as initial data
+                                    logger.info(f"🔍 BEFORE handle_sensor_log: sensor={sensor.code}, is_initial_startup={is_initial_startup}, first_cycle={first_cycle}")
+                                    await handle_sensor_log(db, sensor, machine.id, value, timestamp, is_initial_read=(is_initial_startup and first_cycle))
+                                    logger.info(f"✅ AFTER handle_sensor_log: sensor={sensor.code}")
+                                    
+                                    # Update Last Value (AFTER handle_sensor_log so it sees pre-updated state)
                                     result = await db.execute(select(models.SensorLastValue).where(models.SensorLastValue.sensor_id == sensor.id))
                                     last_val = result.scalar_one_or_none()
                                     if last_val:
@@ -544,13 +764,11 @@ async def read_group_loop(group_key, plcs_in_group):
                                         )
                                     db.add(last_val)
                                     records_to_save += 1
-                                    
-                                    # Handle alarms if this sensor is marked as is_alarm
-                                    await handle_sensor_alarm(db, sensor, machine, sensor_conf, value, timestamp)
 
                             except Exception as e:
-                                # import traceback
-                                # logger.error(f"Error reading sensor {sensor.code}: {e!r}")
+                                import traceback
+                                logger.error(f"❌ Error handling sensor {sensor.code}: {e!r}")
+                                logger.error(traceback.format_exc())
                                 quality = 2
                                 db_stats.record_error(str(e))
                     
@@ -570,6 +788,10 @@ async def read_group_loop(group_key, plcs_in_group):
                 if readings_log:
                     logger.info(f"📡 [{plc.name}] {' | '.join(readings_log)}")
 
+            # Mark first cycle as complete after processing all PLCs
+            if first_cycle:
+                first_cycle = False
+            
             # Sleep interval (using the first PLC's interval as reference, or default 1s)
             interval = plcs_in_group[0]["plc"].poll_interval_s
             await asyncio.sleep(interval)
@@ -866,6 +1088,8 @@ async def check_services():
         logger.error(f"❌ Database Service: {pg_stats.get('error', 'Unknown error')}")
 
 async def main():
+    global initial_data_loaded
+    
     # Version
     VERSION = "0.8"
     logger.info(f"🚀 Industrial IoT Collector v{VERSION}")
@@ -944,7 +1168,8 @@ async def main():
             # Start new groups
             for key in new_keys - current_keys:
                 logger.info(f"🚀 Starting monitor for {key}")
-                running_tasks[key] = asyncio.create_task(read_group_loop(key, new_plc_groups[key]))
+                # Pass is_initial_startup flag on first group creation (when initial_data_loaded is False)
+                running_tasks[key] = asyncio.create_task(read_group_loop(key, new_plc_groups[key], is_initial_startup=not initial_data_loaded))
                 group_signatures[key] = {p["plc"].code for p in new_plc_groups[key]}
             
             # Check existing groups for changes
@@ -988,8 +1213,12 @@ async def main():
                 if key not in running_tasks:
                     # New
                     logger.info(f"🚀 Starting monitor for {key}")
-                    running_tasks[key] = asyncio.create_task(read_group_loop(key, new_group))
+                    # Pass is_initial_startup flag on first group creation (when initial_data_loaded is False)
+                    running_tasks[key] = asyncio.create_task(read_group_loop(key, new_group, is_initial_startup=not initial_data_loaded))
                     group_signatures[key] = new_sig
+                    # After starting the first group, mark initial data as loaded
+                    if not initial_data_loaded:
+                        initial_data_loaded = True
                 else:
                     # Existing, check signature
                     old_sig = group_signatures.get(key)
@@ -1003,7 +1232,7 @@ async def main():
                         except asyncio.CancelledError:
                             pass
                         
-                        running_tasks[key] = asyncio.create_task(read_group_loop(key, new_group))
+                        running_tasks[key] = asyncio.create_task(read_group_loop(key, new_group, is_initial_startup=False))
                         group_signatures[key] = new_sig
             
         except Exception as e:

@@ -1,18 +1,39 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Factory, History, Settings, Menu, X, Server, Activity, BellRing, Database, Grid, LogOut } from 'lucide-react';
 import { useAppContext } from '../App';
 import { useAuth } from '../features/auth/useAuth';
+import { scadaBackendService } from '../services/scadaBackendService';
 
 const APP_VERSION = '0.1.0';
 
 
 export const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentBackend, backends, setCurrentBackend } = useAppContext();
+  const [criticalAlarmCount, setCriticalAlarmCount] = useState(0);
+  const { currentBackend, backends, setCurrentBackend, isFullscreen } = useAppContext();
   const { logout, user } = useAuth();
   const location = useLocation();
+
+  // Cargar contador de alarmas críticas
+  useEffect(() => {
+    const loadCriticalCount = async () => {
+      try {
+        const result = await scadaBackendService.getCriticalAlarmsCount();
+        if (result) {
+          setCriticalAlarmCount(result.count);
+        }
+      } catch (error) {
+        console.error('Failed to load critical alarm count:', error);
+      }
+    };
+
+    loadCriticalCount();
+    // Actualizar cada 30 segundos
+    const interval = setInterval(loadCriticalCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { icon: Factory, label: 'Detalle Máquina', path: '/machines' },
@@ -31,14 +52,15 @@ export const Layout: React.FC = () => {
   return (
     <div className="flex h-screen bg-scada-900 text-slate-100 overflow-hidden font-sans">
       {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
+      {sidebarOpen && !isFullscreen && (
         <div 
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Hidden in fullscreen mode */}
+      {!isFullscreen && (
       <aside className={`
         fixed inset-y-0 left-0 z-30 w-64 bg-scada-800 border-r border-scada-700 transform transition-transform duration-200 ease-in-out
         lg:relative lg:translate-x-0
@@ -64,14 +86,22 @@ export const Layout: React.FC = () => {
               to={item.path}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) => `
-                flex items-center gap-3 px-4 py-3 rounded-md transition-colors
+                flex items-center justify-between px-4 py-3 rounded-md transition-colors
                 ${isActive || (item.path.includes('/machines') && location.pathname.includes('/machines')) 
                   ? 'bg-scada-500 text-white shadow-lg shadow-blue-500/20' 
                   : 'text-slate-400 hover:bg-scada-700 hover:text-white'}
               `}
             >
-              <item.icon size={20} />
-              <span className="font-medium">{item.label}</span>
+              <div className="flex items-center gap-3">
+                <item.icon size={20} />
+                <span className="font-medium">{item.label}</span>
+              </div>
+              {/* Badge para alarmas críticas */}
+              {item.path === '/alarms' && criticalAlarmCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse">
+                  {criticalAlarmCount}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -96,10 +126,12 @@ export const Layout: React.FC = () => {
           </button>
         </div>
       </aside>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
+        {/* Top Header - Hidden in fullscreen mode */}
+        {!isFullscreen && (
         <header className="h-16 bg-scada-800 border-b border-scada-700 flex items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-4">
             <button 
@@ -116,6 +148,7 @@ export const Layout: React.FC = () => {
           {/* Right side empty as requested */}
           <div></div>
         </header>
+        )}
 
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-scada-900">

@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-11-29
+
+### Added
+- ✅ **Frontend Token Authentication System**
+  - Created public `/api/token` endpoint returning API_TOKEN for unauthenticated clients
+  - Implemented automatic token fetch and caching in `ScadaBackendService`
+  - Added `ensureTokenReady()` method to guarantee token availability before API requests
+  - Token stored in localStorage and reused across sessions
+  - Automatic token refresh on 401/403 errors
+
+- ✅ **Initial Sensor Data Logging**
+  - Collector now registers initial sensor readings on first cycle as INFO logs
+  - Fixed code ordering: `handle_sensor_log()` now called BEFORE updating `SensorLastValue`
+  - First read correctly sees `prev_value = None` to trigger initial registration
+  - All 53 sensors register their initial values in `sensor_logs` table
+  - Enhanced debug logging with sensor code, cycle info, and error tracebacks
+
+### Fixed
+- ✅ **403 Forbidden Errors on POST Endpoints**
+  - Root cause: Frontend had no Bearer token for authentication
+  - All POST endpoints (e.g., `/api/sensors/{sensor_id}/severity-config`) now working
+  - Frontend automatically fetches token on first request
+  - Token included in Authorization header for all API requests
+
+- ✅ **Collector Initialization Issues**
+  - Fixed `NameError: 'machine' is not defined` - Now queries machine object per PLC
+  - Fixed `NameError: 'sensor_conf' is not defined` - Simplified alarm handler to use sensor attributes
+  - Updated `handle_sensor_alarm()` signature to not depend on sensor_conf dictionary
+  - Removed traceback suppression - error logging now visible for debugging
+
+- ✅ **Race Condition in Frontend Token Initialization**
+  - Fixed: Token fetch was async but not awaited in constructor
+  - Token now guaranteed available before any API request
+  - Added `tokenInitialized` flag to prevent duplicate fetch attempts
+
+### Technical Details
+- **Frontend Service Architecture**: Token manager pattern with automatic retry
+- **Collector Database**: SensorLastValue update moved after log creation for correct initial read detection
+- **API Authentication**: Stateless token system with public endpoint for unauthenticated access
+- **Logging**: INFO level logs for initial sensor registration and ERROR level for exceptions
+
+### Performance
+- Initial sensor logging completes in single cycle at startup
+- No performance impact on subsequent reads (normal threshold-based logging continues)
+- Token caching reduces authentication overhead
+
+### Database
+- `sensor_logs` table now populated with initial readings on each system restart
+- 53 sensors × 1 initial record = 53+ entries per startup cycle
+- Supports up to 2 PLCs (Secadora 21, Secadora 24) with 26-27 sensors each
+
 ## [0.2.2] - 2025-01-21
 
 ### Fixed

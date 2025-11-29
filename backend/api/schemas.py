@@ -244,3 +244,82 @@ class ConnectedMachine(BaseModel):
 class ConnectedMachineResponse(BaseModel):
     machines: list[ConnectedMachine]
     summary: dict
+
+# Alarm Sensors Schemas
+class AlarmSensorInfo(BaseModel):
+    """Información de un sensor disponible para alarmas"""
+    id: int
+    code: str
+    name: str
+    type: str
+    unit: Optional[str] = None
+    address: int
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
+    plc_id: int
+    plc_code: str
+    plc_name: str
+
+class MachineAlarmSensors(BaseModel):
+    """Sensores disponibles de una máquina para crear alarmas"""
+    machine_id: int
+    machine_code: str
+    machine_name: str
+    sensors: List[AlarmSensorInfo]
+
+# Sensor Logs Schemas
+class SensorLogBase(BaseModel):
+    sensor_id: int
+    machine_id: int
+    previous_value: Optional[float] = None
+    current_value: float
+    variation_percent: Optional[float] = None
+    severity: str = "INFO"
+    unit: Optional[str] = None
+
+class SensorLogCreate(SensorLogBase):
+    timestamp: Optional[datetime] = None
+
+class SensorLog(SensorLogBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class SensorLogResponse(SensorLog):
+    """Respuesta con información extendida del log"""
+    created_at: datetime = None  # Se genera igual que timestamp
+    sensor_code: Optional[str] = None
+    sensor_name: Optional[str] = None
+    machine_code: Optional[str] = None
+    machine_name: Optional[str] = None
+
+# Sensor Severity Config Schemas
+class SensorSeverityConfigBase(BaseModel):
+    default_severity: str = "INFO"
+    variation_threshold_normal: float = 5.0
+    variation_threshold_alert: float = 10.0
+    variation_threshold_critical: float = 20.0
+    is_boolean_critical: bool = False  # Para sensores booleanos
+    log_enabled: bool = True
+    log_interval_seconds: int = 0
+
+class SensorSeverityConfigCreate(SensorSeverityConfigBase):
+    sensor_id: int
+
+class SensorSeverityConfig(SensorSeverityConfigBase):
+    id: int
+    sensor_id: int
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class SensorSeverityConfigResponse(SensorSeverityConfig):
+    """Respuesta con información del sensor"""
+    sensor_code: Optional[str] = None
+    sensor_name: Optional[str] = None
+    sensor_type: Optional[str] = None
+
